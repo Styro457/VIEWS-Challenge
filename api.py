@@ -20,6 +20,6 @@ def get_all_cells():
 # ... = required
 @app.get(path="/cells")
 def get_cells_by(ids: List[int] = Query(None, description="List of Cells IDs"), month_range_start: int = None,
-                 month_range_end: int = None, country: str = None):
+                 month_range_end: int = None, country_id: int = None):
     """Returns all cells that match the criteria passed as query parameters"""
     return f"IDs: {ids}\nMonth Range:{month_range_start} - {month_range_end}\nCountry: {country}"
