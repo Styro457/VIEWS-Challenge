@@ -16,14 +16,11 @@ jobs:
       with:
         python-version: 3.11
 
-    - name: Install Hatch
-      run: pip install hatch
-
     - name: Install project dependencies
-      run: hatch run pip install -e .[dev]
+      run: pip install -e .[dev]
 
     - name: Run Ruff (linting)
-      run: hatch run ruff check src/views_challenge tests
+      run: ruff check src/views_challenge tests
 
     - name: Run pytest (testing)
-      run: hatch run pytest
+      run: pytest
