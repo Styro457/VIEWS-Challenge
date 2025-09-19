@@ -14,7 +14,7 @@ authors = [
     { name = "Charles", email = "" }
 ]
 
-requires-python = ">=3.8"
+requires-python = ">=3.11,<3.15"
 dependencies = [
     "fastapi>=0.111.0",
     "uvicorn>=0.26.0",
