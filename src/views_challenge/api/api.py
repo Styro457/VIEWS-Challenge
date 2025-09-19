@@ -26,4 +26,5 @@ def get_cells_by(
     country: str = None,
 ):
     """Returns all cells that match the criteria passed as query parameters"""
-    return f"IDs: {ids}\nMonth Range:{month_range_start} - {month_range_end}\nCountry: {country}"
+    return (f"IDs: {ids}\nMonth Range:{month_range_start} -"
+            f" {month_range_end}\nCountry: {country}")
