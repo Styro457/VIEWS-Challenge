@@ -24,7 +24,8 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "ruff",
-    "pytest"
+    "pytest",
+    "httpx"
 ]
 [project.scripts]
 myapp = "views_challenge.__main__:main"
