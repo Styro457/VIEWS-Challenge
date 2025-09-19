@@ -14,7 +14,11 @@
 
 ```console
 pip install -e .[dev]
+```
 
+## Running
+
+```console
 uvicorn views_challenge.main:app --reload
 ```
 
