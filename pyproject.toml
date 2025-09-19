@@ -27,5 +27,10 @@ dev = [
     "pytest",
     "httpx"
 ]
+
 [project.scripts]
 myapp = "views_challenge.__main__:main"
+
+[tool.ruff]
+line-length = 88
+lint.select = ["E", "F", "N"]  # "N" enables naming rules

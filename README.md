@@ -8,7 +8,6 @@
 ## Table of Contents
 
 - [Installation](#installation)
-- [License](#license)
 
 ## Installation
 
@@ -20,5 +19,12 @@ pip install -e .[dev]
 
 ```console
 uvicorn views_challenge.main:app --reload
+```
+
+## Tasks
+
+Lint
+```console
+ruff check src/views_challenge tests
 ```
 
