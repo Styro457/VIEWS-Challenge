@@ -1,0 +1,45 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+.env/
+.envrc
+*.env
+.venv
+
+# PyCharm project files
+.idea/
+*.iml
+
+# VS Code (if you switch editors)
+.vscode/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# Logs and coverage
+*.log
+coverage.xml
+htmlcov/
+.cache/
+.tox/
+
+# Test artifacts
+.pytest_cache/
+nosetests.xml
+test-results/
+
+# Jupyter notebooks
+.ipynb_checkpoints/
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Pandas profiling or other reports
+report.html
