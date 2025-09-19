@@ -16,16 +16,22 @@ filepath = "./preds_001.parquet"
 router = APIRouter()
 
 
-# @router.get(path="/all_months")
-# def get_all_months():
-#     """Returns all available months"""
-#     return "All Months!"
-#
-#
-# @router.get(path="/all_cells")
-# def get_all_cells():
-#     """Returns all available cells"""
-#     return "All Cells!"
+@router.get(path="/all_months")
+def get_all_months():
+    """Returns all available months"""
+    df = pandas.read_parquet(filepath, engine="pyarrow")
+    df = df.reset_index()
+    unique_months = df['month_id'].unique()
+    return unique_months.tolist()
+
+
+@router.get(path="/all_cells")
+def get_all_cells():
+    """Returns all available cells"""
+    df = pandas.read_parquet(filepath, engine="pyarrow")
+    df = df.reset_index()
+    unique_cells = df['priogrid_id'].unique()
+    return unique_cells.tolist()
 
 
 def filter_file(df, priogrid_ids, month_range_start, month_range_end, country_id):
