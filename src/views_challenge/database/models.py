@@ -10,6 +10,7 @@ DEFAULT_DAILY_REQUESTS_LIMIT = 1000
 
 # represents the table for keys
 class APIKey(Base):
+    """ORM Model for storing data about api keys"""
     __tablename__ = "api_keys"
     key = Column(String, primary_key=True)
     expires_at = Column(DateTime, nullable=True)

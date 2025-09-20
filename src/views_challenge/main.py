@@ -15,5 +15,6 @@ Base.metadata.create_all(bind=engine)
 
 @app.on_event("startup")
 def on_startup():
+   """Called on API startup, updates database schemas"""
    Base.metadata.create_all(bind=engine)
    

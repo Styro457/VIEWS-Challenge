@@ -8,7 +8,7 @@ from typing import Optional
 
 
 def decode_country(country_id: int) -> Optional[str]:
-    """Returns country name based on M49 ID"""
+    """Returns country name based on provided M49 ID"""
     try:
         # Path to country mapping file (in api directory)
         country_list_path = os.path.join(
