@@ -7,10 +7,9 @@ from views_challenge.data.data import (
     get_all_months,
     get_all_cells,
     get_all_countries,
-    get_cells_with_filters
+    get_cells_with_filters,
 )
 from views_challenge.data.models import CellsResponse
-from views_challenge.utils import decode_country
 
 
 class ViolenceType(str, Enum):
@@ -65,12 +64,15 @@ def get_cells_by_filters(
     month_range_start: Optional[int] = Query(None, description="Start month ID"),
     month_range_end: Optional[int] = Query(None, description="End month ID"),
     country_id: Optional[int] = Query(None, description="Country ID"),
-    violence_types: Optional[List[ViolenceType]] = Query(None, description="Violence types to include"),
+    violence_types: Optional[List[ViolenceType]] = Query(
+        None, description="Violence types to include"
+    ),
     limit: int = Query(10, description="Maximum number of cells to return"),
     return_params: Optional[List[ReturnParameters]] = Query(
         None,
-        description="Specify which data fields to return (e.g., map_value, ci_90, ci_99)"
-    )
+        description="Specify which data fields to return"
+                    " (e.g., map_value, ci_90, ci_99)",
+    ),
 ):
     """
     Get grid cells with selective forecast data based on ReturnParameters.
@@ -118,11 +120,16 @@ def get_cells_by_filters(
         ci_50 = ReturnParameters.ci_50 in return_params
         ci_90 = ReturnParameters.ci_90 in return_params
         ci_99 = ReturnParameters.ci_99 in return_params
-        prob_thresholds = any(getattr(ReturnParameters, f"prob_above_{i}", None) in return_params for i in [10,20,30,40,50,60])
+        prob_thresholds = any(
+            getattr(ReturnParameters, f"prob_above_{i}", None) in return_params
+            for i in [10, 20, 30, 40, 50, 60]
+        )
 
-    # Note: grid_id, month_id, country_name are always included when return_params specified
+    # Note: grid_id, month_id, country_name are always
+    # included when return_params specified
 
-    # Note: Probability thresholds are included if any statistical computation is requested
+    # Note: Probability thresholds are included if any
+    # statistical computation is requested
 
     return get_cells_with_filters(
         priogrid_ids=ids,
@@ -137,7 +144,7 @@ def get_cells_by_filters(
         ci_50=ci_50,
         ci_90=ci_90,
         ci_99=ci_99,
-        include_prob_thresholds=prob_thresholds
+        include_prob_thresholds=prob_thresholds,
     )
 
 
@@ -154,11 +161,7 @@ def health_check():
             "data_loaded": True,
             "total_months": len(months),
             "total_cells": len(cells),
-            "total_countries": len(countries)
+            "total_countries": len(countries),
         }
     except Exception as e:
-        return {
-            "status": "unhealthy",
-            "data_loaded": False,
-            "error": str(e)
-        }
+        return {"status": "unhealthy", "data_loaded": False, "error": str(e)}

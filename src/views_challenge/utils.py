@@ -1,6 +1,7 @@
 """
 Shared utility functions for the VIEWS Challenge application.
 """
+
 import json
 import os
 from typing import Optional
@@ -11,11 +12,9 @@ def decode_country(country_id: int) -> Optional[str]:
     try:
         # Path to country mapping file (in api directory)
         country_list_path = os.path.join(
-            os.path.dirname(__file__),
-            "api",
-            "m49-list.json"
+            os.path.dirname(__file__), "api", "m49-list.json"
         )
-        with open(country_list_path, 'r', encoding='utf-8') as file:
+        with open(country_list_path, "r", encoding="utf-8") as file:
             data = json.load(file)
             countries_list = data["countries"]
             for country in countries_list:
