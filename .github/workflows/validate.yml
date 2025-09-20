@@ -26,6 +26,4 @@ jobs:
       run: pytest
 
     - name: Run Ruff
-      id: ruff
-      run: |
-        ruff check src/views_challenge tests || echo "ruff_exit_code=$?" >> $GITHUB_ENV
+      run: ruff check src/views_challenge tests
