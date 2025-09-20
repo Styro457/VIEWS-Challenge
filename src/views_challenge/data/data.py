@@ -274,10 +274,10 @@ class ViewsDataProcessor:
             month_range_end=month_range_end,
             country_id=country_id,
         )
-        if limit:
-            filtered_df = filtered_df[:limit]
         if offset:
             filtered_df = filtered_df[offset:]
+        if limit:
+            filtered_df = filtered_df[:limit]
 
         if len(filtered_df) == 0:
             return CellsResponse(cells=[], count=0, filters_applied={})
