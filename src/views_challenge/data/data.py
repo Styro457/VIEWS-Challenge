@@ -267,6 +267,8 @@ class ViewsDataProcessor:
         ci_90: bool = False,
         ci_99: bool = False,
         include_prob_thresholds: bool = True,
+        limit: int = None,
+        offset: int = None
     ) -> CellsResponse:
         """
         Get filtered cell data with comprehensive forecasts.
@@ -293,6 +295,14 @@ class ViewsDataProcessor:
             country_id=country_id,
         )
 
+        # Step 2: Apply limit and offset to the filtered values
+        selected_ids = filtered_df.index.get_level_values("priogrid_id").unique()
+        if offset:
+            selected_ids = selected_ids[offset:]
+        if limit:
+            selected_ids = selected_ids[:limit]
+        filtered_df = filtered_df[filtered_df.index.get_level_values("priogrid_id").isin(selected_ids)]
+
         if len(filtered_df) == 0:
             return CellsResponse(cells=[], count=0, filters_applied={})
 
@@ -307,8 +317,8 @@ class ViewsDataProcessor:
 
         # Group by grid cell
         cells = []
-        for priogrid_id in df.index.get_level_values("priogrid_id").unique():
-            cell_data = df[df.index.get_level_values("priogrid_id") == priogrid_id]
+        for priogrid_id in selected_ids:
+            cell_data = df[filtered_df.index.get_level_values("priogrid_id") == priogrid_id]
 
             # Get cell metadata from first row
             first_row = cell_data.iloc[0]
@@ -424,6 +434,8 @@ def get_cells_with_filters(
     ci_90: bool = True,
     ci_99: bool = True,
     include_prob_thresholds: bool = True,
+    limit: int = 10,
+    offset: int = None
 ) -> CellsResponse:
     """Get filtered cells using the global data processor."""
     processor = get_data_processor()
@@ -442,6 +454,8 @@ def get_cells_with_filters(
         ci_90=ci_90,
         ci_99=ci_99,
         include_prob_thresholds=include_prob_thresholds,
+        limit=limit,
+        offset=offset,
     )
 
 
