@@ -4,6 +4,8 @@ from views_challenge.api.keys_handler import verify_api_key_with_rate_limit
 from fastapi import APIRouter, Query, Depends
 from starlette.responses import JSONResponse
 
+from views_challenge.configs.config import settings
+
 from views_challenge.data.data import (
     get_all_months,
     get_all_cells,
@@ -40,28 +42,28 @@ router = APIRouter()
 
 
 @router.get("/months")
-def get_available_months(api_key_data=Depends(verify_api_key_with_rate_limit)):
+async def get_available_months(api_key_data=Depends(verify_api_key_with_rate_limit)):
     """Get all available month IDs."""
     months = get_all_months()
     return {"months": months, "count": len(months)}
 
 
 @router.get("/countries")
-def get_available_countries(api_key_data=Depends(verify_api_key_with_rate_limit)):
+async def get_available_countries(api_key_data=Depends(verify_api_key_with_rate_limit)):
     """Get all available country IDs."""
     countries = get_all_countries()
     return {"countries": countries, "count": len(countries)}
 
 
 @router.get("/all_cells")
-def get_all_cells_endpoint(api_key_data=Depends(verify_api_key_with_rate_limit)):
+async def get_all_cells_endpoint(api_key_data=Depends(verify_api_key_with_rate_limit)):
     """Get all available cell IDs."""
     cells = get_all_cells()
     return {"cells": cells, "count": len(cells)}
 
 
 @router.get("/cells", response_model=CellsResponse)
-def get_cells_by_filters(
+async def get_cells_by_filters(
     api_key_data=Depends(verify_api_key_with_rate_limit),
     ids: Optional[List[int]] = Query(None, description="List of grid cell IDs"),
     month_range_start: Optional[int] = Query(None, description="Start month ID"),
@@ -70,7 +72,8 @@ def get_cells_by_filters(
     violence_types: Optional[List[ViolenceType]] = Query(
         None, description="Violence types to include"
     ),
-    limit: int = Query(10, description="Maximum number of cells to return"),
+    limit: int = Query(settings.cell_request_default_limit, ge=1, le=settings.cell_request_max_limit,
+                       description="Maximum number of cells to return"),
     offset: Optional[int] = Query(
         None, description="Offset from where to start returning cells"
     ),
@@ -162,7 +165,7 @@ def get_cells_by_filters(
 
 
 @router.get("/health")
-def health_check():
+async def health_check():
     """Health check endpoint."""
     try:
         months = get_all_months()
