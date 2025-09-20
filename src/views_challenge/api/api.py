@@ -2,6 +2,7 @@ from enum import Enum
 from typing import List, Optional
 
 from fastapi import APIRouter, Query
+from starlette.responses import JSONResponse
 
 from views_challenge.data.data import (
     get_all_months,
@@ -131,7 +132,7 @@ def get_cells_by_filters(
     # Note: Probability thresholds are included if any
     # statistical computation is requested
 
-    return get_cells_with_filters(
+    filtered_cells = get_cells_with_filters(
         priogrid_ids=ids,
         month_range_start=month_range_start,
         month_range_end=month_range_end,
@@ -146,6 +147,9 @@ def get_cells_by_filters(
         ci_99=ci_99,
         include_prob_thresholds=prob_thresholds,
     )
+
+    response = JSONResponse(content=filtered_cells.model_dump(exclude_none=True))
+    return response
 
 
 @router.get("/health")
