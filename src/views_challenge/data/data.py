@@ -8,7 +8,7 @@ from typing import List, Optional
 from views_pipeline_core.data.handlers import PGMDataset
 
 from .models import Cell, MonthForecast, ViolenceTypeForecast, CellsResponse
-from views_challenge.utils import decode_country
+from views_challenge.utils.utils import decode_country
 
 
 class ViewsDataProcessor:
