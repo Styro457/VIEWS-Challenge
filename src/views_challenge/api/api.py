@@ -4,6 +4,8 @@ from typing import List, Optional
 from fastapi import APIRouter, Query
 from starlette.responses import JSONResponse
 
+from views_challenge.configs.config import settings
+
 from views_challenge.data.data import (
     get_all_months,
     get_all_cells,
@@ -69,7 +71,8 @@ async def get_cells_by_filters(
     violence_types: Optional[List[ViolenceType]] = Query(
         None, description="Violence types to include"
     ),
-    limit: int = Query(10, description="Maximum number of cells to return"),
+    limit: int = Query(settings.cell_request_default_limit, ge=1, le=settings.cell_request_max_limit,
+                       description="Maximum number of cells to return"),
     offset: Optional[int] = Query(
         None, description="Offset from where to start returning cells"
     ),

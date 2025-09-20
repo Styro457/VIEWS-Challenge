@@ -4,11 +4,12 @@ from views_challenge.database.database import engine
 from views_challenge.database.models import Base
 from starlette.middleware.gzip import GZipMiddleware
 from views_challenge.api import api
+from views_challenge.configs.config import settings
 
 app = FastAPI()
 app.include_router(api.router)
 
-app.add_middleware(GZipMiddleware, minimum_size=1024)
+app.add_middleware(GZipMiddleware, minimum_size=settings.response_compression_min)
 
 #Base.metadata.create_all(bind=engine)
 
