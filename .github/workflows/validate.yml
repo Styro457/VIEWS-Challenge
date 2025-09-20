@@ -22,9 +22,10 @@ jobs:
     - name: Install project dependencies
       run: pip install -e .[dev]
 
-    - name: Run Ruff (linting)
-      run: ruff check src/views_challenge tests
-      continue-on-error: true
-
-    - name: Run pytest (testing)
+    - name: Run pytest
       run: pytest
+
+    - name: Run Ruff
+      id: ruff
+      run: |
+        ruff check src/views_challenge tests || echo "ruff_exit_code=$?" >> $GITHUB_ENV
