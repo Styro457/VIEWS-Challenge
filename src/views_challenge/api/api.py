@@ -69,6 +69,9 @@ def get_cells_by_filters(
         None, description="Violence types to include"
     ),
     limit: int = Query(10, description="Maximum number of cells to return"),
+    offset: Optional[int] = Query(
+        None, description="Offset from where to start returning cells"
+    ),
     return_params: Optional[List[ReturnParameters]] = Query(
         None,
         description="Specify which data fields to return"
@@ -96,10 +99,10 @@ def get_cells_by_filters(
     """
 
     # Set defaults when no filters provided
-    if not any([ids, month_range_start, month_range_end, country_id]):
-        # Get first N cells as default
-        all_cells = get_all_cells()
-        ids = all_cells[:limit]
+    # if not any([ids, month_range_start, month_range_end, country_id]):
+    #     # Get first N cells as default
+    #     all_cells = get_all_cells()
+    #     ids = all_cells[:limit]
 
     # Convert enum values to strings
     violence_type_strings = None
@@ -146,6 +149,8 @@ def get_cells_by_filters(
         ci_90=ci_90,
         ci_99=ci_99,
         include_prob_thresholds=prob_thresholds,
+        limit=limit,
+        offset=offset
     )
 
     response = JSONResponse(content=filtered_cells.model_dump(exclude_none=True))

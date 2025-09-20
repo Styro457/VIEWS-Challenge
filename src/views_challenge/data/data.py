@@ -247,6 +247,8 @@ class ViewsDataProcessor:
         ci_90: bool = False,
         ci_99: bool = False,
         include_prob_thresholds: bool = True,
+        limit: int = None,
+        offset: int = None
     ) -> CellsResponse:
         """
         Get filtered cell data with comprehensive forecasts.
@@ -272,6 +274,10 @@ class ViewsDataProcessor:
             month_range_end=month_range_end,
             country_id=country_id,
         )
+        if limit:
+            filtered_df = filtered_df[:limit]
+        if offset:
+            filtered_df = filtered_df[offset:]
 
         if len(filtered_df) == 0:
             return CellsResponse(cells=[], count=0, filters_applied={})
@@ -398,6 +404,8 @@ def get_cells_with_filters(
     ci_90: bool = True,
     ci_99: bool = True,
     include_prob_thresholds: bool = True,
+    limit: int = 10,
+    offset: int = None
 ) -> CellsResponse:
     """Get filtered cells using the global data processor."""
     processor = get_data_processor()
@@ -415,6 +423,8 @@ def get_cells_with_filters(
         ci_90=ci_90,
         ci_99=ci_99,
         include_prob_thresholds=include_prob_thresholds,
+        limit=limit,
+        offset=offset,
     )
 
 
