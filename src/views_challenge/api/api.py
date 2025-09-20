@@ -73,11 +73,9 @@ def get_available_countries():
 
 @router.get(path="/all_cells")
 def get_all_cells():
-    """Returns all available cells"""
-    df = pandas.read_parquet(parquet_filepath, engine="pyarrow")
-    df = df.reset_index()
-    unique_cells = df['priogrid_id'].unique()
-    return unique_cells.tolist()
+    """Get all available cell IDs."""
+    cells = get_all_cells()
+    return {"countries": cells, "count": len(cells)}
 
 @router.get("/cells", response_model=CellsResponse)
 def get_cells_by_filters(
