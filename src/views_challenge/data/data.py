@@ -8,6 +8,7 @@ import numpy as np
 from views_pipeline_core.data.handlers import PGMDataset
 
 from .models import Cell, MonthForecast, ViolenceTypeForecast, CellsResponse
+from views_challenge.utils import decode_country
 
 
 class ViewsDataProcessor:
@@ -64,7 +65,14 @@ class ViewsDataProcessor:
 
         return filtered_df
 
-    def _compute_statistics_for_filtered_data(self, filtered_df: pd.DataFrame) -> pd.DataFrame:
+    def _compute_statistics_for_filtered_data(
+        self,
+        filtered_df: pd.DataFrame,
+        map_value: bool = True,
+        ci_50: bool = False,
+        ci_90: bool = False,
+        ci_99: bool = False
+    ) -> pd.DataFrame:
         """Compute statistics only for the filtered subset (efficient)."""
         if len(filtered_df) == 0:
             return filtered_df
@@ -81,28 +89,32 @@ class ViewsDataProcessor:
         # Create PGMDataset for VIEWS calculations on filtered data only
         dataset = PGMDataset(source=predictions_df)
 
-        # Calculate all statistics for filtered data
-        print("  Calculating MAP estimates...")
-        map_estimates = dataset.calculate_map()
-
-        print("  Calculating confidence intervals...")
-        hdi_50 = dataset.calculate_hdi(alpha=0.5)
-        hdi_90 = dataset.calculate_hdi(alpha=0.9)
-        hdi_99 = dataset.calculate_hdi(alpha=0.99)
-
         # Combine everything into comprehensive dataframe
         comprehensive_df = metadata_df.copy()
 
-        # Add MAP estimates
-        for col in map_estimates.columns:
-            comprehensive_df[col] = map_estimates[col]
+        # Conditionally calculate statistics based on requested parameters
+        if map_value:
+            print("  Calculating MAP estimates...")
+            map_estimates = dataset.calculate_map()
+            for col in map_estimates.columns:
+                comprehensive_df[col] = map_estimates[col]
 
-        # Add HDI bounds for each confidence level
-        for alpha, hdi_df in [(0.5, hdi_50), (0.9, hdi_90), (0.99, hdi_99)]:
-            confidence_pct = int(alpha * 100)
-            for col in hdi_df.columns:
-                new_col_name = col.replace('_hdi_', f'_hdi_{confidence_pct}_')
-                comprehensive_df[new_col_name] = hdi_df[col]
+        # Calculate confidence intervals only if requested
+        confidence_levels = []
+        if ci_50:
+            confidence_levels.append((0.5, "50"))
+        if ci_90:
+            confidence_levels.append((0.9, "90"))
+        if ci_99:
+            confidence_levels.append((0.99, "99"))
+
+        if confidence_levels:
+            print("  Calculating confidence intervals...")
+            for alpha, pct_str in confidence_levels:
+                hdi_df = dataset.calculate_hdi(alpha=alpha)
+                for col in hdi_df.columns:
+                    new_col_name = col.replace('_hdi_', f'_hdi_{pct_str}_')
+                    comprehensive_df[new_col_name] = hdi_df[col]
 
         print("  Statistics computation complete!")
         return comprehensive_df
@@ -111,7 +123,12 @@ class ViewsDataProcessor:
         self,
         row: pd.Series,
         violence_type: str,
-        month_id: int
+        month_id: int,
+        map_value: bool = True,
+        ci_50: bool = False,
+        ci_90: bool = False,
+        ci_99: bool = False,
+        include_prob_thresholds: bool = True
     ) -> ViolenceTypeForecast:
         """
         Extract forecast data for a specific violence type from a dataframe row.
@@ -120,35 +137,63 @@ class ViewsDataProcessor:
             row: Row from comprehensive dataframe
             violence_type: One of 'sb', 'ns', 'os'
             month_id: Month identifier
+            map_value: Include MAP estimates
+            ci_50: Include 50% confidence intervals
+            ci_90: Include 90% confidence intervals
+            ci_99: Include 99% confidence intervals
 
         Returns:
-            ViolenceTypeForecast with all 13 values
+            ViolenceTypeForecast with only requested values
         """
         pred_col = f"pred_ln_{violence_type}_best"
 
-        # MAP estimate
-        map_col = f"{pred_col}_map"
-        map_value = float(row[map_col]) if pd.notna(row[map_col]) else 0.0
+        # Extract values based on what was computed
+        extracted_map_value = None
+        if map_value:
+            map_col = f"{pred_col}_map"
+            if map_col in row and pd.notna(row[map_col]):
+                extracted_map_value = float(row[map_col])
 
-        # Confidence intervals
-        ci_50_lower = float(row[f"{pred_col}_hdi_50_lower"]) if f"{pred_col}_hdi_50_lower" in row else 0.0
-        ci_50_upper = float(row[f"{pred_col}_hdi_50_upper"]) if f"{pred_col}_hdi_50_upper" in row else 0.0
+        # Confidence intervals (only if computed)
+        extracted_ci_50 = None
+        if ci_50:
+            ci_50_lower_col = f"{pred_col}_hdi_50_lower"
+            ci_50_upper_col = f"{pred_col}_hdi_50_upper"
+            if ci_50_lower_col in row and ci_50_upper_col in row:
+                lower = float(row[ci_50_lower_col]) if pd.notna(row[ci_50_lower_col]) else 0.0
+                upper = float(row[ci_50_upper_col]) if pd.notna(row[ci_50_upper_col]) else 0.0
+                extracted_ci_50 = (lower, upper)
 
-        ci_90_lower = float(row[f"{pred_col}_hdi_90_lower"]) if f"{pred_col}_hdi_90_lower" in row else 0.0
-        ci_90_upper = float(row[f"{pred_col}_hdi_90_upper"]) if f"{pred_col}_hdi_90_upper" in row else 0.0
+        extracted_ci_90 = None
+        if ci_90:
+            ci_90_lower_col = f"{pred_col}_hdi_90_lower"
+            ci_90_upper_col = f"{pred_col}_hdi_90_upper"
+            if ci_90_lower_col in row and ci_90_upper_col in row:
+                lower = float(row[ci_90_lower_col]) if pd.notna(row[ci_90_lower_col]) else 0.0
+                upper = float(row[ci_90_upper_col]) if pd.notna(row[ci_90_upper_col]) else 0.0
+                extracted_ci_90 = (lower, upper)
 
-        ci_99_lower = float(row[f"{pred_col}_hdi_99_lower"]) if f"{pred_col}_hdi_99_lower" in row else 0.0
-        ci_99_upper = float(row[f"{pred_col}_hdi_99_upper"]) if f"{pred_col}_hdi_99_upper" in row else 0.0
+        extracted_ci_99 = None
+        if ci_99:
+            ci_99_lower_col = f"{pred_col}_hdi_99_lower"
+            ci_99_upper_col = f"{pred_col}_hdi_99_upper"
+            if ci_99_lower_col in row and ci_99_upper_col in row:
+                lower = float(row[ci_99_lower_col]) if pd.notna(row[ci_99_lower_col]) else 0.0
+                upper = float(row[ci_99_upper_col]) if pd.notna(row[ci_99_upper_col]) else 0.0
+                extracted_ci_99 = (lower, upper)
 
         # TODO: Add actual probability threshold calculations
-        # For now, using placeholder values
-        prob_thresholds = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
+        # For now, using placeholder values only if requested
+        if include_prob_thresholds:
+            prob_thresholds = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
+        else:
+            prob_thresholds = [None] * 6
 
         return ViolenceTypeForecast(
-            map_value=map_value,
-            ci_50=(ci_50_lower, ci_50_upper),
-            ci_90=(ci_90_lower, ci_90_upper),
-            ci_99=(ci_99_lower, ci_99_upper),
+            map_value=extracted_map_value,
+            ci_50=extracted_ci_50,
+            ci_90=extracted_ci_90,
+            ci_99=extracted_ci_99,
             prob_above_10=prob_thresholds[0],
             prob_above_20=prob_thresholds[1],
             prob_above_30=prob_thresholds[2],
@@ -163,7 +208,15 @@ class ViewsDataProcessor:
         month_range_start: Optional[int] = None,
         month_range_end: Optional[int] = None,
         country_id: Optional[int] = None,
-        violence_types: Optional[List[str]] = None
+        violence_types: Optional[List[str]] = None,
+        include_grid_id: bool = True,
+        include_lat_lon: bool = True,
+        include_country_id: bool = True,
+        map_value: bool = True,
+        ci_50: bool = False,
+        ci_90: bool = False,
+        ci_99: bool = False,
+        include_prob_thresholds: bool = True
     ) -> CellsResponse:
         """
         Get filtered cell data with comprehensive forecasts.
@@ -193,7 +246,13 @@ class ViewsDataProcessor:
             return CellsResponse(cells=[], count=0, filters_applied={})
 
         # Step 2: Compute statistics only for filtered data (EFFICIENT)
-        df = self._compute_statistics_for_filtered_data(filtered_df)
+        df = self._compute_statistics_for_filtered_data(
+            filtered_df,
+            map_value=map_value,
+            ci_50=ci_50,
+            ci_90=ci_90,
+            ci_99=ci_99
+        )
 
         # Default to all violence types if none specified
         if violence_types is None:
@@ -216,7 +275,12 @@ class ViewsDataProcessor:
                 violence_forecasts = {}
                 for vtype in violence_types:
                     violence_forecasts[vtype] = self._extract_violence_type_forecast(
-                        month_row, vtype, month_id
+                        month_row, vtype, month_id,
+                        map_value=map_value,
+                        ci_50=ci_50,
+                        ci_90=ci_90,
+                        ci_99=ci_99,
+                        include_prob_thresholds=include_prob_thresholds
                     )
 
                 month_forecast = MonthForecast(
@@ -230,13 +294,22 @@ class ViewsDataProcessor:
             # Sort months by month_id
             months.sort(key=lambda x: x.month_id)
 
-            cell = Cell(
-                priogrid_id=priogrid_id,
-                centroid_lat=float(first_row['lat']),
-                centroid_lon=float(first_row['lon']),
-                country_id=int(first_row['country_id']),
-                months=months
-            )
+            # Get country name for frontend display (always included)
+            country_id_val = int(first_row['country_id'])
+            country_name = decode_country(country_id_val)
+
+            # Build cell with only requested fields
+            cell_data = {"months": months, "country_name": country_name}
+
+            if include_grid_id:
+                cell_data["priogrid_id"] = priogrid_id
+            if include_lat_lon:
+                cell_data["centroid_lat"] = float(first_row['lat'])
+                cell_data["centroid_lon"] = float(first_row['lon'])
+            if include_country_id:
+                cell_data["country_id"] = country_id_val
+
+            cell = Cell(**cell_data)
             cells.append(cell)
 
         # Create response
@@ -284,10 +357,38 @@ def get_data_processor() -> ViewsDataProcessor:
 
 
 # Convenience functions for API endpoints
-def get_cells_with_filters(**kwargs) -> CellsResponse:
+def get_cells_with_filters(
+    priogrid_ids: Optional[List[int]] = None,
+    month_range_start: Optional[int] = None,
+    month_range_end: Optional[int] = None,
+    country_id: Optional[int] = None,
+    violence_types: Optional[List[str]] = None,
+    include_grid_id: bool = True,
+    include_lat_lon: bool = True,
+    include_country_id: bool = True,
+    map_value: bool = True,
+    ci_50: bool = True,
+    ci_90: bool = True,
+    ci_99: bool = True,
+    include_prob_thresholds: bool = True
+) -> CellsResponse:
     """Get filtered cells using the global data processor."""
     processor = get_data_processor()
-    return processor.get_filtered_cells(**kwargs)
+    return processor.get_filtered_cells(
+        priogrid_ids=priogrid_ids,
+        month_range_start=month_range_start,
+        month_range_end=month_range_end,
+        country_id=country_id,
+        violence_types=violence_types,
+        include_grid_id=include_grid_id,
+        include_lat_lon=include_lat_lon,
+        include_country_id=include_country_id,
+        map_value=map_value,
+        ci_50=ci_50,
+        ci_90=ci_90,
+        ci_99=ci_99,
+        include_prob_thresholds=include_prob_thresholds
+    )
 
 
 def get_all_months() -> List[int]:
