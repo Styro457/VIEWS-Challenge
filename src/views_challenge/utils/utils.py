@@ -14,8 +14,8 @@ def _load_countries() -> dict[int, str]:
         data = json.load(file)
         return {int(c["m49code"]): c["name"] for c in data["countries"]}
 
-country_names = _load_countries()
+_country_names = _load_countries()
 
 def decode_country(country_id: int) -> Optional[str]:
     """Returns country name based on M49 ID"""
-    return country_names.get(country_id)
+    return _country_names.get(country_id)
