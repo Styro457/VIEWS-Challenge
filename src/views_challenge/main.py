@@ -1,7 +1,7 @@
 import views_challenge.api.api as api
 from fastapi import FastAPI
 from views_challenge.database.database import engine
-from views_challenge.data.models import Base
+from views_challenge.database.models import Base
 from starlette.middleware.gzip import GZipMiddleware
 from views_challenge.api import api
 

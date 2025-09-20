@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, Header, HTTPException
 from sqlalchemy.orm import Session
 from views_challenge.database.database import SessionLocal
-from views_challenge.data.models import APIKey
+from views_challenge.database.models import APIKey
 
 router = APIRouter()
 print("API router loaded")

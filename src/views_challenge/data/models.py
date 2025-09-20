@@ -1,15 +1,99 @@
-from sqlalchemy import Column, String, Boolean, DateTime
-
-# function that creates a base class for ORM models
-from sqlalchemy.ext.declarative import declarative_base
-
-# initiates base class for all models
-Base = declarative_base()
+from typing import Tuple, List, Optional
+from pydantic import BaseModel, Field
 
 
-# represents the table for keys
-class APIKey(Base):
-    __tablename__ = "api_keys"
-    key = Column(String, primary_key=True)
-    expires_at = Column(DateTime)
-    revoked = Column(Boolean, default=False)
+class ViolenceTypeForecast(BaseModel):
+    """Forecast data for a specific violence type (sb, ns, or os)"""
+
+    map_value: Optional[float] = Field(
+        None, description="MAP (Maximum A Posteriori) estimate"
+    )
+    ci_50: Optional[Tuple[float, float]] = Field(
+        None, description="50% confidence interval (lower, upper)"
+    )
+    ci_90: Optional[Tuple[float, float]] = Field(
+        None, description="90% confidence interval (lower, upper)"
+    )
+    ci_99: Optional[Tuple[float, float]] = Field(
+        None, description="99% confidence interval (lower, upper)"
+    )
+    prob_above_10: Optional[float] = Field(
+        None, ge=0, le=1, description="Probability above threshold 10"
+    )
+    prob_above_20: Optional[float] = Field(
+        None, ge=0, le=1, description="Probability above threshold 20"
+    )
+    prob_above_30: Optional[float] = Field(
+        None, ge=0, le=1, description="Probability above threshold 30"
+    )
+    prob_above_40: Optional[float] = Field(
+        None, ge=0, le=1, description="Probability above threshold 40"
+    )
+    prob_above_50: Optional[float] = Field(
+        None, ge=0, le=1, description="Probability above threshold 50"
+    )
+    prob_above_60: Optional[float] = Field(
+        None, ge=0, le=1, description="Probability above threshold 60"
+    )
+
+    model_config = {"extra": "forbid"}
+
+    def is_empty(self) -> bool:
+        """Check if all forecast values are None (empty object)"""
+        return all(
+            getattr(self, field) is None
+            for field in [
+                'map_value', 'ci_50', 'ci_90', 'ci_99',
+                'prob_above_10', 'prob_above_20', 'prob_above_30',
+                'prob_above_40', 'prob_above_50', 'prob_above_60'
+            ]
+        )
+
+
+class MonthForecast(BaseModel):
+    """Complete forecast data for all violence types for a specific month"""
+
+    month_id: int = Field(..., description="Month identifier")
+
+    # State-based conflict (government vs rebels)
+    sb: Optional[ViolenceTypeForecast] = Field(
+        None, description="State-based conflict forecast"
+    )
+
+    # Non-state conflict (organized groups fighting)
+    ns: Optional[ViolenceTypeForecast] = Field(
+        None, description="Non-state conflict forecast"
+    )
+
+    # One-sided violence (attacks on civilians)
+    os: Optional[ViolenceTypeForecast] = Field(
+        None, description="One-sided violence forecast"
+    )
+
+
+class Cell(BaseModel):
+    """Grid cell with selective forecast data based on ReturnParameters"""
+
+    priogrid_id: Optional[int] = Field(None, description="PRIO-GRID cell identifier")
+    centroid_lat: Optional[float] = Field(None, description="Latitude of cell centroid")
+    centroid_lon: Optional[float] = Field(
+        None, description="Longitude of cell centroid"
+    )
+    country_id: Optional[int] = Field(None, description="UN M49 country identifier")
+    country_name: Optional[str] = Field(None, description="Human-readable country name")
+    months: List[MonthForecast] = Field(..., description="Monthly forecasts")
+
+    model_config = {"extra": "forbid"}
+
+    def model_dump(self, **kwargs):
+        """Override to exclude None values from JSON output"""
+        data = super().model_dump(**kwargs)
+        return {k: v for k, v in data.items() if v is not None}
+
+
+class CellsResponse(BaseModel):
+    """API response containing multiple cells"""
+
+    cells: List[Cell] = Field(..., description="List of grid cells with forecasts")
+    count: int = Field(..., description="Number of cells returned")
+    filters_applied: dict = Field(..., description="Summary of filters applied")
