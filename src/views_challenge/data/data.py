@@ -274,10 +274,14 @@ class ViewsDataProcessor:
             month_range_end=month_range_end,
             country_id=country_id,
         )
+
+        # Step 2: Apply limit and offset to the filtered values
+        selected_ids = filtered_df.index.get_level_values("priogrid_id").unique()
         if offset:
-            filtered_df = filtered_df[offset:]
+            selected_ids = selected_ids[offset:]
         if limit:
-            filtered_df = filtered_df[:limit]
+            selected_ids = selected_ids[:limit]
+        filtered_df = filtered_df[filtered_df.index.get_level_values("priogrid_id").isin(selected_ids)]
 
         if len(filtered_df) == 0:
             return CellsResponse(cells=[], count=0, filters_applied={})
@@ -293,8 +297,8 @@ class ViewsDataProcessor:
 
         # Group by grid cell
         cells = []
-        for priogrid_id in df.index.get_level_values("priogrid_id").unique():
-            cell_data = df[df.index.get_level_values("priogrid_id") == priogrid_id]
+        for priogrid_id in selected_ids:
+            cell_data = df[filtered_df.index.get_level_values("priogrid_id") == priogrid_id]
 
             # Get cell metadata from first row
             first_row = cell_data.iloc[0]
