@@ -23,6 +23,7 @@ class ReturnParameters(str, Enum):
     grid_id = "grid_id"
     lat_lon = "lat_lon"
     country_id = "country_id"
+    country_name = "country_name"
     map_value = "map_value"
     ci_50 = "ci_50"
     ci_90 = "ci_90"
@@ -109,14 +110,15 @@ def get_cells_by_filters(
     # Convert ReturnParameters to field inclusion flags
     if return_params is None:
         # Default: include all fields
-        grid_id = lat_lon = country_id_field = True
+        grid_id = lat_lon = country_id_field = country_name_field = True
         map_value = ci_50 = ci_90 = ci_99 = True
         prob_thresholds = True
     else:
         # Selective: include essentials + specified fields
         grid_id = True  # Always include when return_params specified
         lat_lon = ReturnParameters.lat_lon in return_params
-        country_id_field = ReturnParameters.country_id in return_params
+        country_id_field = True  # Always include when return_params specified
+        country_name_field = ReturnParameters.country_name in return_params
         map_value = ReturnParameters.map_value in return_params
         ci_50 = ReturnParameters.ci_50 in return_params
         ci_90 = ReturnParameters.ci_90 in return_params
@@ -126,7 +128,7 @@ def get_cells_by_filters(
             for i in [10, 20, 30, 40, 50, 60]
         )
 
-    # Note: grid_id, month_id, country_name are always
+    # Note: grid_id, month_id are always
     # included when return_params specified
 
     # Note: Probability thresholds are included if any
@@ -137,6 +139,7 @@ def get_cells_by_filters(
         month_range_start=month_range_start,
         month_range_end=month_range_end,
         country_id=country_id,
+        country_name_field=country_name_field,
         violence_types=violence_type_strings,
         include_grid_id=grid_id,
         include_lat_lon=lat_lon,

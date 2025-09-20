@@ -43,6 +43,7 @@ class ViewsDataProcessor:
         month_range_start: Optional[int] = None,
         month_range_end: Optional[int] = None,
         country_id: Optional[int] = None,
+        country_name_field: bool = None,
     ) -> pd.DataFrame:
         """Apply filters to the dataframe (fast pandas operations)."""
         filtered_df = df.copy()
@@ -219,18 +220,36 @@ class ViewsDataProcessor:
         else:
             prob_thresholds = [None] * 6
 
-        return ViolenceTypeForecast(
-            map_value=extracted_map_value,
-            ci_50=extracted_ci_50,
-            ci_90=extracted_ci_90,
-            ci_99=extracted_ci_99,
-            prob_above_10=prob_thresholds[0],
-            prob_above_20=prob_thresholds[1],
-            prob_above_30=prob_thresholds[2],
-            prob_above_40=prob_thresholds[3],
-            prob_above_50=prob_thresholds[4],
-            prob_above_60=prob_thresholds[5],
-        )
+        # Build forecast object with only requested fields
+        forecast_data = {}
+
+        if map_value and extracted_map_value is not None:
+            forecast_data["map_value"] = extracted_map_value
+
+        if ci_50 and extracted_ci_50 is not None:
+            forecast_data["ci_50"] = extracted_ci_50
+
+        if ci_90 and extracted_ci_90 is not None:
+            forecast_data["ci_90"] = extracted_ci_90
+
+        if ci_99 and extracted_ci_99 is not None:
+            forecast_data["ci_99"] = extracted_ci_99
+
+        if include_prob_thresholds:
+            if prob_thresholds[0] is not None:
+                forecast_data["prob_above_10"] = prob_thresholds[0]
+            if prob_thresholds[1] is not None:
+                forecast_data["prob_above_20"] = prob_thresholds[1]
+            if prob_thresholds[2] is not None:
+                forecast_data["prob_above_30"] = prob_thresholds[2]
+            if prob_thresholds[3] is not None:
+                forecast_data["prob_above_40"] = prob_thresholds[3]
+            if prob_thresholds[4] is not None:
+                forecast_data["prob_above_50"] = prob_thresholds[4]
+            if prob_thresholds[5] is not None:
+                forecast_data["prob_above_60"] = prob_thresholds[5]
+
+        return ViolenceTypeForecast(**forecast_data)
 
     def get_filtered_cells(
         self,
@@ -242,6 +261,7 @@ class ViewsDataProcessor:
         include_grid_id: bool = True,
         include_lat_lon: bool = True,
         include_country_id: bool = True,
+        include_country_name: bool = True,
         map_value: bool = True,
         ci_50: bool = False,
         ci_90: bool = False,
@@ -303,7 +323,7 @@ class ViewsDataProcessor:
                 # Create violence type forecasts based on requested types
                 violence_forecasts = {}
                 for vtype in violence_types:
-                    violence_forecasts[vtype] = self._extract_violence_type_forecast(
+                    forecast = self._extract_violence_type_forecast(
                         month_row,
                         vtype,
                         month_id,
@@ -313,6 +333,10 @@ class ViewsDataProcessor:
                         ci_99=ci_99,
                         include_prob_thresholds=include_prob_thresholds,
                     )
+                    # Only include violence types that have actual data
+                    forecast_dict = forecast.model_dump()
+                    if forecast_dict:  # If the dumped dict is not empty
+                        violence_forecasts[vtype] = forecast
 
                 month_forecast = MonthForecast(
                     month_id=month_id,
@@ -325,12 +349,11 @@ class ViewsDataProcessor:
             # Sort months by month_id
             months.sort(key=lambda x: x.month_id)
 
-            # Get country name for frontend display (always included)
             country_id_val = int(first_row["country_id"])
             country_name = decode_country(country_id_val)
 
             # Build cell with only requested fields
-            cell_data = {"months": months, "country_name": country_name}
+            cell_data = {"months": months}
 
             if include_grid_id:
                 cell_data["priogrid_id"] = priogrid_id
@@ -339,6 +362,8 @@ class ViewsDataProcessor:
                 cell_data["centroid_lon"] = float(first_row["lon"])
             if include_country_id:
                 cell_data["country_id"] = country_id_val
+            if include_country_name:
+                cell_data["country_name"] = country_name
 
             cell = Cell(**cell_data)
             cells.append(cell)
@@ -393,6 +418,7 @@ def get_cells_with_filters(
     include_grid_id: bool = True,
     include_lat_lon: bool = True,
     include_country_id: bool = True,
+    country_name_field: bool = True,
     map_value: bool = True,
     ci_50: bool = True,
     ci_90: bool = True,
@@ -410,6 +436,7 @@ def get_cells_with_filters(
         include_grid_id=include_grid_id,
         include_lat_lon=include_lat_lon,
         include_country_id=include_country_id,
+        include_country_name=country_name_field,
         map_value=map_value,
         ci_50=ci_50,
         ci_90=ci_90,
