@@ -1,0 +1,45 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+env
+pip-log.txt
+pip-delete-this-directory.txt
+.tox
+.coverage
+.coverage.*
+.pytest_cache
+nosetests.xml
+.cache
+coverage.xml
+*.cover
+*.log
+.git
+.mypy_cache
+.pytest_cache
+
+# Development
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific
+test_*.py
+basic_mapping.py
+=*
+
+# Documentation
+*.md
+README.md
