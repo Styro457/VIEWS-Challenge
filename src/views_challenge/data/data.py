@@ -5,7 +5,7 @@ Data processing functions using views_pipeline_core for VIEWS conflict forecasti
 import pandas as pd
 from pathlib import Path
 from typing import List, Optional
-from handler import PGMDataset
+from views_pipeline_core.data.handlers import PGMDataset
 
 from .models import Cell, MonthForecast, ViolenceTypeForecast, CellsResponse
 from views_challenge.utils.utils import decode_country
