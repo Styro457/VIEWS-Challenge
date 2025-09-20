@@ -1,3 +1,8 @@
+"""
+Pydantic models for data.py calculations
+"""
+
+
 from typing import Tuple, List, Optional
 from pydantic import BaseModel, Field
 

@@ -1,3 +1,8 @@
+"""
+SQLAlchemy ORM Models for Postgres database
+"""
+
+
 from sqlalchemy import Column, String, Boolean, DateTime, Integer
 
 # function that creates a base class for ORM models
@@ -18,3 +23,4 @@ class APIKey(Base):
     daily_limit = Column(Integer, default=DEFAULT_DAILY_REQUESTS_LIMIT)
     admin = Column(Boolean, default=False)
     expired = Column(Boolean, default=False)
+

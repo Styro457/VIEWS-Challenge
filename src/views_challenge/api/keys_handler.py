@@ -1,3 +1,8 @@
+"""
+API key handling functions
+"""
+
+
 # cryptography module for token generation
 import secrets
 from datetime import datetime, timedelta

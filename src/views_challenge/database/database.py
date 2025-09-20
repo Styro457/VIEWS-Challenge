@@ -1,3 +1,8 @@
+"""
+Objects and constants necessary to use Postgres database
+"""
+
+
 # engine ~ used by alchemy, talks to postgres ~ connection
 from sqlalchemy import create_engine
 # factory used to create session objects
