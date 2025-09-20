@@ -41,7 +41,9 @@ class ViewsDataProcessor:
         priogrid_ids: Optional[List[int]] = None,
         month_range_start: Optional[int] = None,
         month_range_end: Optional[int] = None,
-        country_id: Optional[int] = None
+        country_id: Optional[int] = None,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
     ) -> pd.DataFrame:
         """Apply filters to the dataframe (fast pandas operations)."""
         filtered_df = df.copy()
@@ -61,6 +63,12 @@ class ViewsDataProcessor:
         if month_range_end is not None:
             month_mask = filtered_df.index.get_level_values('month_id') <= month_range_end
             filtered_df = filtered_df[month_mask]
+
+        # Apply offset and limit
+        if offset:
+            filtered_df = filtered_df.iloc[offset:]
+        if limit is not None:
+            filtered_df = filtered_df.iloc[:limit]
 
         return filtered_df
 
@@ -163,7 +171,9 @@ class ViewsDataProcessor:
         month_range_start: Optional[int] = None,
         month_range_end: Optional[int] = None,
         country_id: Optional[int] = None,
-        violence_types: Optional[List[str]] = None
+        violence_types: Optional[List[str]] = None,
+        limit: Optional[int] = 1000,
+        offset: Optional[int] = 0,
     ) -> CellsResponse:
         """
         Get filtered cell data with comprehensive forecasts.
@@ -186,7 +196,9 @@ class ViewsDataProcessor:
             priogrid_ids=priogrid_ids,
             month_range_start=month_range_start,
             month_range_end=month_range_end,
-            country_id=country_id
+            country_id=country_id,
+            limit=limit,
+            offset=offset
         )
 
         if len(filtered_df) == 0:
