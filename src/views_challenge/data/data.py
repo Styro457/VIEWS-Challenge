@@ -4,8 +4,7 @@ Data processing functions using views_pipeline_core for VIEWS conflict forecasti
 import pandas as pd
 from pathlib import Path
 from typing import List, Optional, Dict, Any, Tuple
-import numpy as np
-from views_pipeline_core.data.handlers import PGMDataset
+from handler import PGMDataset
 
 from .models import Cell, MonthForecast, ViolenceTypeForecast, CellsResponse
 
