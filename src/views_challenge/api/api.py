@@ -1,5 +1,3 @@
-import json
-import os
 from enum import Enum
 from typing import List, Optional
 
@@ -12,16 +10,13 @@ from views_challenge.data.data import (
     get_cells_with_filters
 )
 from views_challenge.data.models import CellsResponse
+from views_challenge.utils import decode_country
 
 
 class ViolenceType(str, Enum):
     os = "os"
     ns = "ns"
     sb = "sb"
-    
-country_list_path = "./m49-list.json"
-# pandas reads the file relative to location from where the program is executed
-parquet_filepath = os.path.join(os.path.dirname(__file__), "preds_001.parquet")
 
 
 class ReturnParameters(str, Enum):
@@ -40,21 +35,6 @@ class ReturnParameters(str, Enum):
     prob_above_60 = "prob_above_60"
 
 
-def decode_country(country_id):
-    """Returns country name based on M49 ID"""
-    with open(country_list_path, 'r', encoding='utf-8') as file:
-        data = json.load(file)
-        countries_list = data["countries"]
-        for country in countries_list:
-            if int(country["m49code"]) == country_id:
-                return country["name"]
-        return None
-
-
-def decode_month(month_id):
-    return
-
-
 router = APIRouter()
 
 
@@ -64,18 +44,20 @@ def get_available_months():
     months = get_all_months()
     return {"months": months, "count": len(months)}
 
- 
+
 @router.get("/countries")
 def get_available_countries():
     """Get all available country IDs."""
     countries = get_all_countries()
     return {"countries": countries, "count": len(countries)}
 
-@router.get(path="/all_cells")
-def get_all_cells():
+
+@router.get("/all_cells")
+def get_all_cells_endpoint():
     """Get all available cell IDs."""
     cells = get_all_cells()
-    return {"countries": cells, "count": len(cells)}
+    return {"cells": cells, "count": len(cells)}
+
 
 @router.get("/cells", response_model=CellsResponse)
 def get_cells_by_filters(
@@ -84,43 +66,31 @@ def get_cells_by_filters(
     month_range_end: Optional[int] = Query(None, description="End month ID"),
     country_id: Optional[int] = Query(None, description="Country ID"),
     violence_types: Optional[List[ViolenceType]] = Query(None, description="Violence types to include"),
-    limit: int = Query(10, description="Maximum number of cells to return")
+    limit: int = Query(10, description="Maximum number of cells to return"),
+    return_params: Optional[List[ReturnParameters]] = Query(
+        None,
+        description="Specify which data fields to return (e.g., map_value, ci_90, ci_99)"
+    )
 ):
     """
-    Get grid cells with comprehensive forecast data.
+    Get grid cells with selective forecast data based on ReturnParameters.
 
     Default behavior (no query params):
     - Returns first 10 cells
     - Includes all violence types (sb, ns, os)
     - Includes all available months for those cells
+    - Only computes basic cell info and MAP estimates
 
-    With query params: Filters as specified
-    Applies filters to the dataframe
-    kwargs - filtering parameters e.g. country_id"""
+    ReturnParameters control what data is computed and returned:
+    - grid_id, lat_lon, country_id: Basic cell information (always included)
+    - map_value: MAP estimates
+    - ci_50, ci_90, ci_99: Confidence intervals
+    - prob_above_10 through prob_above_60: Probability thresholds
 
-    filtered_df = df.copy()
-    if priogrid_ids:
-        filtered_df = filtered_df[filtered_df["priogrid_id"].isin(priogrid_ids)]
-    if month_range_end and month_range_start:
-        filtered_df = filtered_df[
-            (filtered_df["month_id"] >= month_range_start) & (filtered_df["month_id"] <= month_range_end)]
-    if country_id:
-        filtered_df = filtered_df[filtered_df["country_id"] == country_id]
-    return filtered_df
-
-
-@router.get(path="/cells")
-def get_cells_by(ids: List[int] = Query(None, description="List of Cells IDs"), month_range_start: int = None,
-                 month_range_end: int = None, country_id: int = None, violence_type: ViolenceType = Query(None),
-                 return_param_selection: List[ReturnParameters] = Query(...)):
-    """Returns all cells that match the criteria passed as query parameters"""
-    print(
-        f"IDs: {ids}\nMonth Range:{month_range_start} - {month_range_end}\nCountry: {country_id}\nViolence Type: {violence_type}\nParams requested: {return_param_selection}")
-    df = pandas.read_parquet(parquet_filepath, engine="pyarrow")
-    df = df.reset_index()
-    filtered_df = filter_file(df, priogrid_ids=ids, month_range_start=month_range_start,
-                              month_range_end=month_range_end,
-                              country_id=country_id)
+    Examples:
+    - /cells?return_params=map_value,ci_90
+    - /cells?ids=123&return_params=map_value,ci_50,ci_99
+    """
 
     # Set defaults when no filters provided
     if not any([ids, month_range_start, month_range_end, country_id]):
@@ -133,12 +103,41 @@ def get_cells_by(ids: List[int] = Query(None, description="List of Cells IDs"), 
     if violence_types:
         violence_type_strings = [vt.value for vt in violence_types]
 
+    # Convert ReturnParameters to field inclusion flags
+    if return_params is None:
+        # Default: include all fields
+        grid_id = lat_lon = country_id_field = True
+        map_value = ci_50 = ci_90 = ci_99 = True
+        prob_thresholds = True
+    else:
+        # Selective: include essentials + specified fields
+        grid_id = True  # Always include when return_params specified
+        lat_lon = ReturnParameters.lat_lon in return_params
+        country_id_field = ReturnParameters.country_id in return_params
+        map_value = ReturnParameters.map_value in return_params
+        ci_50 = ReturnParameters.ci_50 in return_params
+        ci_90 = ReturnParameters.ci_90 in return_params
+        ci_99 = ReturnParameters.ci_99 in return_params
+        prob_thresholds = any(getattr(ReturnParameters, f"prob_above_{i}", None) in return_params for i in [10,20,30,40,50,60])
+
+    # Note: grid_id, month_id, country_name are always included when return_params specified
+
+    # Note: Probability thresholds are included if any statistical computation is requested
+
     return get_cells_with_filters(
         priogrid_ids=ids,
         month_range_start=month_range_start,
         month_range_end=month_range_end,
         country_id=country_id,
-        violence_types=violence_type_strings
+        violence_types=violence_type_strings,
+        include_grid_id=grid_id,
+        include_lat_lon=lat_lon,
+        include_country_id=country_id_field,
+        map_value=map_value,
+        ci_50=ci_50,
+        ci_90=ci_90,
+        ci_99=ci_99,
+        include_prob_thresholds=prob_thresholds
     )
 
 
