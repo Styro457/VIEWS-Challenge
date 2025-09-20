@@ -1,6 +1,6 @@
 import views_challenge.api.api as api
 from fastapi import FastAPI
-from views_challenge.api.db import engine
+from views_challenge.database.database import engine
 from views_challenge.data.models import Base
 
 Base.metadata.create_all(bind=engine)

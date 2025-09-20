@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, Header, HTTPException
 from sqlalchemy.orm import Session
-from views_challenge.api.db import SessionLocal
+from views_challenge.database.database import SessionLocal
 from views_challenge.data.models import APIKey
 
 router = APIRouter()
@@ -26,7 +26,9 @@ def get_db():
         db.close()
 
 
-def verify_api_key(api_key: str = Header(..., alias="Authorization"), db: Session = Depends(get_db)):
+def verify_api_key(
+    api_key: str = Header(..., alias="Authorization"), db: Session = Depends(get_db)
+):
     key_record = db.query(APIKey).filter(APIKey.key == api_key).first()
     if key_record:
         if key_record.revoked:
