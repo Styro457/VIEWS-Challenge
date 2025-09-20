@@ -38,6 +38,17 @@ class ViolenceTypeForecast(BaseModel):
 
     model_config = {"extra": "forbid"}
 
+    def is_empty(self) -> bool:
+        """Check if all forecast values are None (empty object)"""
+        return all(
+            getattr(self, field) is None
+            for field in [
+                'map_value', 'ci_50', 'ci_90', 'ci_99',
+                'prob_above_10', 'prob_above_20', 'prob_above_30',
+                'prob_above_40', 'prob_above_50', 'prob_above_60'
+            ]
+        )
+
 
 class MonthForecast(BaseModel):
     """Complete forecast data for all violence types for a specific month"""
