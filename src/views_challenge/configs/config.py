@@ -1,19 +1,37 @@
-from pydantic_settings import BaseSettings
+"""
+Config file for accessing settings located from environment variables
+Using pydantic-settings would be cleaner, but it conflicts with views_pipeline_core
+"""
+import os
+from dotenv import load_dotenv
+from pydantic import BaseModel, Field, ValidationError
 
-class Settings(BaseSettings):
-    port: int = 8000
-
-    database_url: str = ""
-
-    response_compression_min: int = 1024
-    cell_request_default_limit: int = 50
-    cell_request_max_limit: int = 500
-    timeout: int = 60
-
-    debug: bool = False
+load_dotenv()  # load .env into os.environ
 
 
-    class Config:
-        env_file = ".env"
+class Settings(BaseModel):
+    port: int = Field(8000, description="Server port")
+    
+    database_url: str = Field("", description="Database connection URL")
+    
+    response_compression_min: int = Field(1024, description="Minimum size for compression")
+    cell_request_default_limit: int = Field(50, description="Default request limit")
+    cell_request_max_limit: int = Field(500, description="Maximum request limit")
+    timeout: int = Field(60, description="Request timeout in seconds")
+    
+    debug: bool = Field(False, description="Enable debug mode")
 
-settings = Settings()
+    @classmethod
+    def from_env(cls):
+        raw = {}
+        for field in cls.model_fields.keys():
+            env_key = field.upper()
+            if env_key in os.environ:
+                raw[field] = os.environ[env_key]
+        return cls(**raw)
+
+
+try:
+    settings = Settings.from_env()
+except ValidationError as e:
+    raise RuntimeError(f"Invalid environment configuration: {e}")
