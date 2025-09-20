@@ -19,7 +19,8 @@ dependencies = [
     "fastapi>=0.111.0",
     "uvicorn>=0.26.0",
     "pydantic>=2.11.0",
-    "pandas>=2.3.0"
+    "pandas>=2.3.0",
+    "views_pipeline_core==2.1.1"
 ]
 
 [project.optional-dependencies]
