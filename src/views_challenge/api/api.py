@@ -40,28 +40,28 @@ router = APIRouter()
 
 
 @router.get("/months")
-def get_available_months():
+async def get_available_months():
     """Get all available month IDs."""
     months = get_all_months()
     return {"months": months, "count": len(months)}
 
 
 @router.get("/countries")
-def get_available_countries():
+async def get_available_countries():
     """Get all available country IDs."""
     countries = get_all_countries()
     return {"countries": countries, "count": len(countries)}
 
 
 @router.get("/all_cells")
-def get_all_cells_endpoint():
+async def get_all_cells_endpoint():
     """Get all available cell IDs."""
     cells = get_all_cells()
     return {"cells": cells, "count": len(cells)}
 
 
 @router.get("/cells", response_model=CellsResponse)
-def get_cells_by_filters(
+async def get_cells_by_filters(
     ids: Optional[List[int]] = Query(None, description="List of grid cell IDs"),
     month_range_start: Optional[int] = Query(None, description="Start month ID"),
     month_range_end: Optional[int] = Query(None, description="End month ID"),
@@ -161,7 +161,7 @@ def get_cells_by_filters(
 
 
 @router.get("/health")
-def health_check():
+async def health_check():
     """Health check endpoint."""
     try:
         months = get_all_months()
