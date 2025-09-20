@@ -65,15 +65,15 @@ def verify_admin_api_key(api_key: str = Header(..., alias="Authorization"), db: 
     raise HTTPException(status_code=403, detail="API Key Not Found")
 
 @keys_router.get("/public_stuff")
-def access_protected_data():
+def access_public_data():
     return "Public!"
 
 @keys_router.get("/user_stuff")
-def access_protected_data(key=Depends(verify_api_key)):
+def access_user_data(key=Depends(verify_api_key)):
     return "User!"
 
 @keys_router.get("/admin_stuff")
-def access_protected_data(admin_key:str=Depends(verify_admin_api_key)):
+def access_admin_data(admin_key:str=Depends(verify_admin_api_key)):
     return "Admin!"
 
 
