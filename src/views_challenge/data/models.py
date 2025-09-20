@@ -1,25 +1,14 @@
-from typing import Tuple, List
+from sqlalchemy import Column, String, Boolean, DateTime, Integer
+# function that creates a base class for ORM models
+from sqlalchemy.ext.declarative import declarative_base
 
-from pydantic import BaseModel, Field
+# initiates base class for all models
+Base = declarative_base()
 
+# represents the table for keys
+class APIKey(Base):
+    __tablename__ = "api_keys"
+    key = Column(String, primary_key=True)
+    expires_at = Column(DateTime)
+    revoked  = Column(Boolean, default=False)
 
-class MonthForecast(BaseModel):
-    map_value: float = Field(..., description="Mean value (MAP)")
-    ci_50: Tuple[float, float] = Field(..., description="50% confidence interval (lower, upper)")
-    ci_90: Tuple[float, float] = Field(..., description="90% confidence interval (lower, upper)")
-    ci_99: Tuple[float, float] = Field(..., description="99% confidence interval (lower, upper)")
-    prob_above_10: float = Field(..., ge=0, le=1)
-    prob_above_20: float = Field(..., ge=0, le=1)
-    prob_above_30: float = Field(..., ge=0, le=1)
-    prob_above_40: float = Field(..., ge=0, le=1)
-    prob_above_50: float = Field(..., ge=0, le=1)
-    prob_above_60: float = Field(..., ge=0, le=1)
-
-
-class Cell(BaseModel):
-    """Cell Model"""
-    id: int = Field(...)
-    centroid_lat: float = Field(...)
-    centroid_lon: float = Field(...)
-    country_id: int = Field(...)
-    months: List[MonthForecast] = Field(...)
