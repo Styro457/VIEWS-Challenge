@@ -14,7 +14,7 @@ from views_challenge.utils import decode_country
 class ViewsDataProcessor:
     """Handles processing of VIEWS forecast data using views_pipeline_core."""
 
-    def __init__(self, data_dir: str = "hack_data"):
+    def __init__(self, data_dir: str = "env"):
         """
         Initialize the data processor.
 
