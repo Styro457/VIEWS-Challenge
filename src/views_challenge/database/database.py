@@ -41,4 +41,5 @@ class Database:
 database = Database()
 if settings.database_user is not None and settings.database_user != "":
     DB_URL = f"postgresql://{settings.database_user}:{settings.database_password}@localhost:{settings.database_port}/views_api"
-    database.connect(settings.database_url)
+    print(DB_URL)
+    database.connect(DB_URL)
