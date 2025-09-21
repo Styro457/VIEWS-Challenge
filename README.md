@@ -15,6 +15,7 @@ API Service that provides user friendly quering functionality for accessing VIEW
 - Select metrics that are calculated using statistical analysis e.g. MAP, confidence intervals, etc
 - Paginated JSON Response
 - API Key access system
+- Fully Conteinerized for easy deployment
 
 ## Tech Stack
 - Python
@@ -22,6 +23,7 @@ API Service that provides user friendly quering functionality for accessing VIEW
 - Pytest
 - Ruff
 - Makefile
+- Docker
 
 ## Endpoints
 FastAPI provides dynamicly updated **/docs** endpoint that helps with basic documentation and testing of endpoints
@@ -31,6 +33,10 @@ FastAPI provides dynamicly updated **/docs** endpoint that helps with basic docu
 - **/countries** - returns an id list for all available countries
 - **/all_cells** - returns a id list of all available grid cells
 - **/cells** - accepts cells identifiers from the user (e.g. cell id, country id), filters the dataset based on them, returns calculated values requested by the user (e.g.  MAP (mean value), 3 confidence intervals (50%, 90%, 99%), and 6 probabilities of passing certain thresholds (plus a few helper values like grid ID, location, country ID))
+
+### Example Queries for /Cells
+- **GET /cells?return_params=map_value,ci_90,ci_99** - return MAP estimates and 90/99% confidence intervals for all cells (limit may apply)
+- **GET /cells?country_id=45&violence_types=sb,ns&return_params=map_value,prob_above_050** - return MAP and probability of violence exceeding 0.5 for cells with country id equal to 49
 
 ### API Keys Endpoints
 - **/create_user_api_key** - Generates a standart api key and saves it to the database
@@ -60,25 +66,4 @@ ruff check src/views_challenge tests
 ```
 
 ## Test Dataset
-
-## Admin Access Key
-SviyiqdT_sANAmbD0qTs_NJXH4xXYWBgb0twevfMVYE
-
-### Example
-curl -H "Authorization: SviyiqdT_sANAmbD0qTs_NJXH4xXYWBgb0twevfMVYE" http://localhost:8000/admin_stuff
-
-### How to create an admin key
-```
-sudo -u postgres psql views_api
-
-INSERT INTO api_keys (key, expires_at, revoked, daily_limit, admin, expired)
-VALUES (
-  'SviyiqdT_sANAmbD0qTs_NJXH4xXYWBgb0twevfMVYE',
-  NULL,
-  FALSE,
-  1000,  -- or whatever DEFAULT_DAILY_REQUESTS_LIMIT is
-  TRUE,
-  FALSE
-);
-```
 
