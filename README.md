@@ -1,8 +1,8 @@
 ![# Views Simle API](https://i.imgur.com/9FWwZws.png)
 <div align="center">
 
-  <a href="">![GitHub Release](https://img.shields.io/github/v/release/Styro457/VIEWS-Challenge)</a>
-  <a href="">![GitHub License](https://img.shields.io/github/license/Styro457/VIEWS-Challenge)</a>
+  <a href="">![GitHub Release](https://img.shields.io/github/v/release/Styro457/VIEWS-Simple-API)</a>
+  <a href="">![GitHub License](https://img.shields.io/github/license/Styro457/VIEWS-Simple-API)</a>
   <a href="">[![demo](https://img.shields.io/endpoint?url=https://google.com)](https://yourdomain.com)</a>
 
 </div>
