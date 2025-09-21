@@ -16,6 +16,7 @@ from views_challenge.data.models import (
 )
 from views_challenge.data import statistics
 from views_challenge.utils.utils import decode_country
+from views_challenge.utils.caching import frequency_cache
 
 CONFLICT_TYPES = ["sb", "ns", "os"]
 
@@ -446,6 +447,7 @@ def get_data_processor() -> ViewsDataProcessor:
 
 
 # Convenience functions for API endpoints
+@frequency_cache
 def get_cells_with_filters(
     priogrid_ids: Optional[List[int]] = None,
     month_range_start: Optional[int] = None,
