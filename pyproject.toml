@@ -20,6 +20,7 @@ dependencies = [
     "uvicorn>=0.36.0",
     "pydantic>=2.11.9",
     "pandas>=1.4.4",
+    "cachetools>=6.2.0",
     "views_pipeline_core==2.1.1"
 ]
 
