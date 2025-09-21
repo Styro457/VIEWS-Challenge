@@ -12,7 +12,7 @@ load_dotenv()  # load .env into os.environ
 class Settings(BaseModel):
     port: int = Field(8000, description="Server port")
     
-    database_url: str = Field("", description="Database connection URL")
+    database_url: str = Field(None, description="Database connection URL")
     use_api_keys: bool = Field(True, description="Use API keys for authentification")
     
     response_compression_min: int = Field(1024, description="Minimum size for compression")
