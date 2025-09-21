@@ -15,6 +15,7 @@ class Database:
     def __init__(self):
         self.engine = None
         self.session_local = None
+        self._connected = False
 
     def connect(self, database_url : str):
         #TODO: Implement proper logging
@@ -25,6 +26,11 @@ class Database:
 
         # Create session factory binded to engine
         self.session_local = sessionmaker(bind=self.engine)
+
+        self._connected = True
+
+    def is_connected(self) -> bool:
+        return self._connected
 
     def get_db(self):
         if self.engine is None:

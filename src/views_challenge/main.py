@@ -16,7 +16,7 @@ app.add_middleware(GZipMiddleware, minimum_size=settings.response_compression_mi
 app.include_router(api.router)
 
 
-if database.get_db() is not None:
+if database.is_connected():
     app.include_router(keys_handler.keys_router, prefix="/auth")
 
     Base.metadata.create_all(bind=database.engine)
