@@ -3,7 +3,7 @@ SQLAlchemy ORM Models for Postgres database
 """
 
 
-from sqlalchemy import Column, String, Boolean, DateTime, Integer
+from sqlalchemy import Column, String, Boolean, DateTime, Integer, ForeignKey
 
 # function that creates a base class for ORM models
 from sqlalchemy.ext.declarative import declarative_base

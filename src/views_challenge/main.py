@@ -15,7 +15,7 @@ from views_challenge.configs.config import settings
 
 app = FastAPI()
 app.include_router(api.router)
-app.include_router(keys_handler.router, prefix="/auth")
+app.include_router(keys_handler.keys_router, prefix="/auth")
 
 app.add_middleware(GZipMiddleware, minimum_size=settings.response_compression_min)
 
