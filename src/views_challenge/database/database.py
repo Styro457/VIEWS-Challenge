@@ -11,7 +11,6 @@ from views_challenge.configs.config import settings
 
 # dialect://username:password@host:port/database
 # should be stored in .env
-
 DB_URL = f"postgresql://{settings.database_user}:{settings.database_password}@localhost:{settings.database_port}/views_api"
 print(DB_URL)
 
