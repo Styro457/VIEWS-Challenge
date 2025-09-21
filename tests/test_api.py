@@ -9,11 +9,43 @@ from views_challenge.configs.config import settings
 
 settings.keys_mode = False
 
-from views_challenge.main import app
+import pandas as pd
+import pytest
+import os
+
+@pytest.fixture(scope="session", autouse=True)
+def setup_dummy_parquet():
+    os.makedirs("env", exist_ok=True)
+    path = "env/preds_001.parquet"
+
+    created = False
+    if not os.path.exists(path):
+        df = pd.DataFrame({
+            "pred_ln_sb_best": [[0.0, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.24, 0.0]],
+            "pred_ln_os_best": [[0.0, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.24, 0.0]],
+            "pred_ln_ns_best": [[0.0, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.24, 0.0]],
+            "country_id": [163],
+            "lat": [-46.75],
+            "lon": [-37.75],
+            "row": [87],
+            "col": [436],
+            "month_id": [409],
+            "priogrid_id": [62356],
+        })
+        df = df.set_index(["priogrid_id", "month_id"])
+        df.to_parquet(path, index=True)
+        created = True
+
+    yield
+
+    if created and os.path.exists(path):
+        os.remove(path)
 
 # Mock the API key verification for tests
 def mock_verify_api_key():
     return Mock()
+
+from views_challenge.main import app
 
 app.dependency_overrides[verify_api_key_with_rate_limit] = mock_verify_api_key
 
