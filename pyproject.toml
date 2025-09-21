@@ -6,7 +6,6 @@ build-backend = "hatchling.build"
 name = "views-challenge"
 version = "0.1.0"
 description = "VIEWS Challenge: Turning Conflict Forecasts into Accessible APIs"
-readme = "README.md"
 keywords = []
 authors = [
     { name = "Radu", email = "" },
