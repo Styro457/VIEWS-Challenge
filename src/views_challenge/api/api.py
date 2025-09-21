@@ -1,6 +1,6 @@
 from enum import Enum
 from typing import List, Optional
-from views_challenge.api.keys_handler import verify_api_key_with_rate_limit
+from views_challenge.api.keys_handler import verify_api_key_with_rate_limit_func
 from fastapi import APIRouter, Query, Depends
 from starlette.responses import JSONResponse
 
@@ -41,21 +41,21 @@ router = APIRouter()
 
 
 @router.get("/months")
-async def get_available_months(api_key_data=Depends(verify_api_key_with_rate_limit)):
+async def get_available_months(api_key_data=Depends(verify_api_key_with_rate_limit_func)):
     """Get all available month IDs."""
     months = get_all_months()
     return {"months": months, "count": len(months)}
 
 
 @router.get("/countries")
-async def get_available_countries(api_key_data=Depends(verify_api_key_with_rate_limit)):
+async def get_available_countries(api_key_data=Depends(verify_api_key_with_rate_limit_func)):
     """Get all available country IDs."""
     countries = get_all_countries()
     return {"countries": countries, "count": len(countries)}
 
 
 @router.get("/all_cells")
-async def get_all_cells_endpoint(api_key_data=Depends(verify_api_key_with_rate_limit)):
+async def get_all_cells_endpoint(api_key_data=Depends(verify_api_key_with_rate_limit_func)):
     """Get all available cell IDs."""
     cells = get_all_cells()
     return {"cells": cells, "count": len(cells)}
@@ -63,7 +63,7 @@ async def get_all_cells_endpoint(api_key_data=Depends(verify_api_key_with_rate_l
 
 @router.get("/cells", response_model=CellsResponse)
 async def get_cells_by_filters(
-    api_key_data=Depends(verify_api_key_with_rate_limit),
+    api_key_data=Depends(verify_api_key_with_rate_limit_func),
     ids: Optional[List[int]] = Query(None, description="List of grid cell IDs"),
     month_range_start: Optional[int] = Query(None, description="Start month ID"),
     month_range_end: Optional[int] = Query(None, description="End month ID"),

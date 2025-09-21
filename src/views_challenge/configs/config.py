@@ -13,6 +13,7 @@ class Settings(BaseModel):
     port: int = Field(8000, description="Server port")
     
     database_url: str = Field("", description="Database connection URL")
+    use_api_keys: bool = Field(True, description="Use API keys for authentification")
     
     response_compression_min: int = Field(1024, description="Minimum size for compression")
     cell_request_default_limit: int = Field(50, description="Default request limit")
