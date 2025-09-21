@@ -33,6 +33,8 @@ class Settings(BaseModel):
     response_compression_min: int = Field(
         1024, description="Minimum size for compression"
     )
+    max_cache_size: int = Field(50_000, description="Max cache size")
+
     timeout: int = Field(60, description="Request timeout in seconds")
 
     cell_request_default_limit: int = Field(50, description="Default request limit")

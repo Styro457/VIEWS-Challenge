@@ -1,18 +1,19 @@
 import sys
-from cachetools import LFUCache, cached
+from cachetools import LFUCache
+from views_challenge.configs.config import settings
 
-MAX_CACHE_SIZE = 50_000
 FREQUENCY_THRESHOLD = 2
 
 access_counts = {}
 
-cache = LFUCache(maxsize=MAX_CACHE_SIZE, getsizeof=lambda v: sys.getsizeof(v))
+cache = LFUCache(maxsize=settings.max_cache_size, getsizeof=lambda v: sys.getsizeof(v))
 
 
 def make_key(args, kwargs):
     # convert small lists to tuples, others remain the same
     key_args = tuple(tuple(a) if isinstance(a, list) else a for a in args)
-    key_kwargs = tuple((k, tuple(v) if isinstance(v, list) else v) for k, v in kwargs.items())
+    key_kwargs = tuple((k, tuple(v) if isinstance(v, list) else v)
+                       for k, v in kwargs.items())
     return (key_args, key_kwargs)
 
 def frequency_cache(func, threshold=2):
