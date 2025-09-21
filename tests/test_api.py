@@ -2,10 +2,17 @@
 Handles API testing functionality
 """
 
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
+import pytest
 from fastapi.testclient import TestClient
-from views_challenge.main import app
-from views_challenge.api.keys_handler import verify_api_key_with_rate_limit
+
+# Mock the database engine and metadata before importing the app
+with patch('views_challenge.database.database.engine') as mock_engine, \
+     patch('views_challenge.database.models.Base.metadata.create_all') as mock_create_all:
+    mock_engine.execute = Mock()
+    mock_create_all.return_value = None
+    from views_challenge.main import app
+    from views_challenge.api.keys_handler import verify_api_key_with_rate_limit
 
 # Mock the API key verification for tests
 def mock_verify_api_key():
