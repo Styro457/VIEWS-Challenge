@@ -21,7 +21,7 @@ keys_router = APIRouter()
 # Configuration is now handled via settings object from config.py
 
 def use_keys() -> bool:
-    return settings.use_api_keys and database.get_db() is not None
+    return settings.keys_mode and database.get_db() is not None
 
 def check_rate_limit(api_key: str, endpoint: str, db: Session) -> bool:
     """

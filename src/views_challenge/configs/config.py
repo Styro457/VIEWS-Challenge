@@ -27,7 +27,10 @@ class Settings(BaseModel):
 
     response_compression_min: int = Field(1024, description="Minimum size for compression")
     timeout: int = Field(60, description="Request timeout in seconds")
-    
+
+    cell_request_default_limit: int = Field(50, description="Default request limit")
+    cell_request_max_limit: int = Field(500, description="Maximum request limit")
+
     debug: bool = Field(False, description="Enable debug mode")
 
     @classmethod
