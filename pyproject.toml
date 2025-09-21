@@ -20,6 +20,7 @@ dependencies = [
     "pydantic>=2.11.9",
     "pandas>=1.4.4",
     "cachetools>=6.2.0",
+    "psycopg2-binary>=2.8.1",
     "views_pipeline_core==2.1.1"
 ]
 
@@ -36,3 +37,7 @@ myapp = "views_challenge.__main__:main"
 [tool.ruff]
 line-length = 88
 lint.select = ["E", "F", "N"]  # "N" enables naming rules
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/views_challenge"]
+
