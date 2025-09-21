@@ -1,4 +1,4 @@
-from joblib import Parallel, delayed
+from joblib import Parallel
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
@@ -36,21 +36,25 @@ def calculate_threshold_probabilities(
 
         # Batch processing parameters
         batch_size = 1000
-        batches = [flat_tensor[i:i+batch_size] for i in range(0, n_flat, batch_size)]
+        batches = [
+            flat_tensor[i : i + batch_size] for i in range(0, n_flat, batch_size)
+        ]
         prob_flat = []
 
-        with Parallel(n_jobs=-1, prefer="threads") as parallel:
+        with Parallel(n_jobs=-1, prefer="threads"):
             for batch in tqdm(batches, desc=f"{var_name} batches"):
-                batch_results = np.array([
-                    [(samples > t).mean() for t in thresholds] for samples in batch
-                ])
+                batch_results = np.array(
+                    [[(samples > t).mean() for t in thresholds] for samples in batch]
+                )
                 prob_flat.append(batch_results)
 
         prob_array = np.vstack(prob_flat)  # shape (time*entity, n_thresholds)
         index = pd.MultiIndex.from_product(
-            [dataset.dataframe.index.get_level_values(dataset._time_id).unique(),
-             dataset.dataframe.index.get_level_values(dataset._entity_id).unique()],
-            names=[dataset._time_id, dataset._entity_id]
+            [
+                dataset.dataframe.index.get_level_values(dataset._time_id).unique(),
+                dataset.dataframe.index.get_level_values(dataset._entity_id).unique(),
+            ],
+            names=[dataset._time_id, dataset._entity_id],
         )
         columns = [f"{var_name}_p>{t}" for t in thresholds]
         df = pd.DataFrame(prob_array, index=index, columns=columns)

@@ -2,7 +2,6 @@
 API key handling functions
 """
 
-
 # cryptography module for token generation
 import secrets
 from datetime import datetime, timedelta
@@ -11,7 +10,6 @@ from sqlalchemy.orm import Session
 
 from views_challenge.configs.config import settings
 from views_challenge.database.models import APIKey, RequestLog
-from views_challenge.configs.config import settings
 
 from views_challenge.database.database import database
 
@@ -20,8 +18,10 @@ keys_router = APIRouter()
 
 # Configuration is now handled via settings object from config.py
 
+
 def use_keys() -> bool:
     return settings.keys_mode and database.is_connected()
+
 
 def check_rate_limit(api_key: str, endpoint: str, db: Session) -> bool:
     """
@@ -54,8 +54,10 @@ def log_request(api_key: str, endpoint: str, db: Session):
     db.add(request_log)
     db.commit()
 
+
 def verify_api_key(
-    api_key: str = Header(..., alias="Authorization"), db: Session = Depends(database.get_db)
+    api_key: str = Header(..., alias="Authorization"),
+    db: Session = Depends(database.get_db),
 ):
     """
     Verifies provided api key against the database
@@ -104,11 +106,15 @@ def verify_api_key_with_rate_limit(
     # Step 4: Return key record (request proceeds)
     return key_record
 
+
 def keys_disabled():
     return None
 
+
 verify_api_key_func = verify_api_key if use_keys() else keys_disabled
-verify_api_key_with_rate_limit_func = verify_api_key_with_rate_limit if use_keys() else keys_disabled
+verify_api_key_with_rate_limit_func = (
+    verify_api_key_with_rate_limit if use_keys() else keys_disabled
+)
 
 
 def generate_api_key():
@@ -116,6 +122,7 @@ def generate_api_key():
     Generates random base64-encoded url-secure string used as an api key
     """
     return secrets.token_urlsafe(32)
+
 
 def expiration_check(api_key: str, db: Session):
     """
@@ -129,7 +136,10 @@ def expiration_check(api_key: str, db: Session):
         db.commit()
         db.refresh(key_record)
 
-def verify_admin_api_key(api_key: str = Header(..., alias="Authorization"), db: Session = Depends(database.get_db)
+
+def verify_admin_api_key(
+    api_key: str = Header(..., alias="Authorization"),
+    db: Session = Depends(database.get_db),
 ):
     """
     Checks if provided key is an admin key
@@ -137,9 +147,12 @@ def verify_admin_api_key(api_key: str = Header(..., alias="Authorization"), db: 
     key_record = db.query(APIKey).filter(APIKey.key == api_key).first()
     if key_record:
         if not key_record.admin:
-            raise HTTPException(status_code=403, detail="Key does not have admin rights")
+            raise HTTPException(
+                status_code=403, detail="Key does not have admin rights"
+            )
         return key_record
     raise HTTPException(status_code=403, detail="API Key Not Found")
+
 
 @keys_router.get("/public_stuff")
 def access_public_data():
@@ -147,6 +160,7 @@ def access_public_data():
     Testing function to check access to publicly available information
     """
     return "Public!"
+
 
 @keys_router.get("/user_stuff")
 def access_user_data(key=Depends(verify_api_key)):
@@ -156,8 +170,9 @@ def access_user_data(key=Depends(verify_api_key)):
     """
     return "User!"
 
+
 @keys_router.get("/admin_stuff")
-def access_admin_data(admin_key:str=Depends(verify_admin_api_key)):
+def access_admin_data(admin_key: str = Depends(verify_admin_api_key)):
     """
     Testing function to check access to information available with admin api key,
     requires admin key to be accessed
@@ -183,8 +198,12 @@ def create_user_api_key(db: Session = Depends(database.get_db)):
     db.refresh(new_key_object)
     return f"New user key generated: {key}, expires at: {expiration}"
 
+
 @keys_router.post(path="/create_admin_api_key")
-def create_admin_api_key(db: Session = Depends(database.get_db), admin_key:str=Depends(verify_admin_api_key)):
+def create_admin_api_key(
+    db: Session = Depends(database.get_db),
+    admin_key: str = Depends(verify_admin_api_key),
+):
     """
     Generates an admin api key and saves it to the database,
      requires admin key to be accessed
@@ -207,7 +226,11 @@ def get_key_info(key: str, db: Session = Depends(database.get_db)):
 
 
 @keys_router.put(path="/revoke_key/{key}")
-def revoke_key(key: str, db: Session = Depends(database.get_db), admin_key: str = Depends(verify_admin_api_key)):
+def revoke_key(
+    key: str,
+    db: Session = Depends(database.get_db),
+    admin_key: str = Depends(verify_admin_api_key),
+):
     """
     Revokes provided api key, requires admin key to be accessed
     """

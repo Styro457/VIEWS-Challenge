@@ -1,6 +1,7 @@
 """
 Program entry point
 """
+
 from fastapi import FastAPI
 from views_challenge.database.database import database
 from views_challenge.database.models import Base
@@ -25,4 +26,3 @@ if database.is_connected():
     # def on_startup():
     #    """Called on API startup, updates database schemas"""
     #    Base.metadata.create_all(bind=engine)
-   

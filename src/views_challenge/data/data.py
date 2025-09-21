@@ -8,7 +8,12 @@ from typing import List, Optional
 
 from views_pipeline_core.data.handlers import PGMDataset
 
-from views_challenge.data.models import Cell, MonthForecast, ViolenceTypeForecast, CellsResponse
+from views_challenge.data.models import (
+    Cell,
+    MonthForecast,
+    ViolenceTypeForecast,
+    CellsResponse,
+)
 from views_challenge.data import statistics
 from views_challenge.utils.utils import decode_country
 
@@ -135,7 +140,7 @@ class ViewsDataProcessor:
         if thresholds:
             print("  Calculating thresholds probabilities...")
             prob_df = statistics.calculate_threshold_probabilities(
-                dataset, thresholds = thresholds
+                dataset, thresholds=thresholds
             )
 
             # Add each column to the comprehensive dataframe
@@ -154,7 +159,7 @@ class ViewsDataProcessor:
         ci_50: bool = False,
         ci_90: bool = False,
         ci_99: bool = False,
-        thresholds: Optional[List[bool]] = None
+        thresholds: Optional[List[bool]] = None,
     ) -> ViolenceTypeForecast:
         """
         Extract forecast data for a specific violence type from a dataframe row.
@@ -238,7 +243,9 @@ class ViewsDataProcessor:
             for threshold in thresholds:
                 formatted_threshold = str(int(threshold * 100)).zfill(3)
                 threshold_col = f"{pred_col}_p>{threshold}"
-                extracted_thresholds[f"prob_above_{formatted_threshold}"] = float(row[threshold_col])
+                extracted_thresholds[f"prob_above_{formatted_threshold}"] = float(
+                    row[threshold_col]
+                )
 
         # Build forecast object with only requested fields
         forecast_data = {}
@@ -278,7 +285,7 @@ class ViewsDataProcessor:
         ci_99: bool = False,
         thresholds: Optional[List[float]] = None,
         limit: int = None,
-        offset: int = None
+        offset: int = None,
     ) -> CellsResponse:
         """
         Get filtered cell data with comprehensive forecasts.
@@ -316,20 +323,29 @@ class ViewsDataProcessor:
             selected_ids = selected_ids[offset:]
         if limit:
             selected_ids = selected_ids[:limit]
-        filtered_df = filtered_df[filtered_df.index.get_level_values("priogrid_id").isin(selected_ids)]
+        filtered_df = filtered_df[
+            filtered_df.index.get_level_values("priogrid_id").isin(selected_ids)
+        ]
 
         if len(filtered_df) == 0:
             return CellsResponse(cells=[], count=0, filters_applied={})
 
         # Step 3: Compute statistics only for filtered data (EFFICIENT)
         df = self._compute_statistics_for_filtered_data(
-            filtered_df, map_value=map_value, ci_50=ci_50, ci_90=ci_90, ci_99=ci_99, thresholds=thresholds
+            filtered_df,
+            map_value=map_value,
+            ci_50=ci_50,
+            ci_90=ci_90,
+            ci_99=ci_99,
+            thresholds=thresholds,
         )
 
         # Group by grid cell
         cells = []
         for priogrid_id in selected_ids:
-            cell_data = df[filtered_df.index.get_level_values("priogrid_id") == priogrid_id]
+            cell_data = df[
+                filtered_df.index.get_level_values("priogrid_id") == priogrid_id
+            ]
 
             # Get cell metadata from first row
             first_row = cell_data.iloc[0]
@@ -352,7 +368,7 @@ class ViewsDataProcessor:
                         ci_50=ci_50,
                         ci_90=ci_90,
                         ci_99=ci_99,
-                        thresholds=thresholds
+                        thresholds=thresholds,
                     )
                     # Only include violence types that have actual data
                     forecast_dict = forecast.model_dump()
@@ -446,7 +462,7 @@ def get_cells_with_filters(
     ci_99: bool = True,
     thresholds: Optional[List[float]] = None,
     limit: int = 10,
-    offset: int = None
+    offset: int = None,
 ) -> CellsResponse:
     """Get filtered cells using the global data processor."""
     processor = get_data_processor()

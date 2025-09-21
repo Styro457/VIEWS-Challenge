@@ -37,25 +37,32 @@ class ReturnParameters(str, Enum):
     prob_above_050 = "prob_above_050"
     prob_above_080 = "prob_above_080"
 
+
 router = APIRouter()
 
 
 @router.get("/months")
-async def get_available_months(api_key_data=Depends(verify_api_key_with_rate_limit_func)):
+async def get_available_months(
+    api_key_data=Depends(verify_api_key_with_rate_limit_func),
+):
     """Get all available month IDs."""
     months = get_all_months()
     return {"months": months, "count": len(months)}
 
 
 @router.get("/countries")
-async def get_available_countries(api_key_data=Depends(verify_api_key_with_rate_limit_func)):
+async def get_available_countries(
+    api_key_data=Depends(verify_api_key_with_rate_limit_func),
+):
     """Get all available country IDs."""
     countries = get_all_countries()
     return {"countries": countries, "count": len(countries)}
 
 
 @router.get("/all_cells")
-async def get_all_cells_endpoint(api_key_data=Depends(verify_api_key_with_rate_limit_func)):
+async def get_all_cells_endpoint(
+    api_key_data=Depends(verify_api_key_with_rate_limit_func),
+):
     """Get all available cell IDs."""
     cells = get_all_cells()
     return {"cells": cells, "count": len(cells)}
@@ -71,8 +78,12 @@ async def get_cells_by_filters(
     violence_types: Optional[List[ViolenceType]] = Query(
         None, description="Violence types to include"
     ),
-    limit: int = Query(default=settings.cell_request_default_limit, ge=1, le=settings.cell_request_max_limit,
-                       description="Maximum number of cells to return"),
+    limit: int = Query(
+        default=settings.cell_request_default_limit,
+        ge=1,
+        le=settings.cell_request_max_limit,
+        description="Maximum number of cells to return",
+    ),
     offset: Optional[int] = Query(
         None, description="Offset from where to start returning cells"
     ),

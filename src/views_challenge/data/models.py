@@ -2,7 +2,6 @@
 Pydantic models for data.py calculations
 """
 
-
 from typing import Tuple, List, Optional
 from pydantic import BaseModel, Field
 
@@ -48,9 +47,16 @@ class ViolenceTypeForecast(BaseModel):
         return all(
             getattr(self, field) is None
             for field in [
-                'map_value', 'ci_50', 'ci_90', 'ci_99',
-                'prob_above_001', 'prob_above_005', 'prob_above_010',
-                'prob_above_025', 'prob_above_050', 'prob_above_080'
+                "map_value",
+                "ci_50",
+                "ci_90",
+                "ci_99",
+                "prob_above_001",
+                "prob_above_005",
+                "prob_above_010",
+                "prob_above_025",
+                "prob_above_050",
+                "prob_above_080",
             ]
         )
 

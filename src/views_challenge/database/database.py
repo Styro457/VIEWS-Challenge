@@ -1,24 +1,24 @@
 """
 Objects and constants necessary to use Postgres database
 """
-from typing import Optional
 
 # engine ~ used by alchemy, talks to postgres ~ connection
 from sqlalchemy import create_engine
+
 # factory used to create session objects
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import sessionmaker
 
 from views_challenge.configs.config import settings
 
-class Database:
 
+class Database:
     def __init__(self):
         self.engine = None
         self.session_local = None
         self._connected = False
 
-    def connect(self, database_url : str):
-        #TODO: Implement proper logging
+    def connect(self, database_url: str):
+        # TODO: Implement proper logging
         print(f"Connecting to database ({database_url})")
 
         # Initiate engine
@@ -43,6 +43,7 @@ class Database:
         finally:
             # closes the session
             db.close()
+
 
 database = Database()
 if settings.database_user is not None and settings.database_user != "":
