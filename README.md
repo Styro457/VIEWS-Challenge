@@ -1,5 +1,11 @@
 ![# Views Simle API](https://i.imgur.com/9FWwZws.png)
------
+<div align="center">
+
+  <a href="">![GitHub Release](https://img.shields.io/github/v/release/Styro457/VIEWS-Challenge)</a>
+  <a href="">![GitHub License](https://img.shields.io/github/license/Styro457/VIEWS-Challenge)</a>
+  <a href="">[![demo](https://img.shields.io/endpoint?url=https://google.com)](https://yourdomain.com)</a>
+
+</div>
 
 ## Table of Contents
 - [Overview](#overview)
@@ -11,6 +17,8 @@
 **VIEWS Simple API** is a REST API that offers **public access** to the data from the **VIEWS conflict forecasting system**.
 
 Using the raw prediction data from VIEWS and the [views_pipeline_core](https://github.com/views-platform/views-pipeline-core/tree/main) module for statystical analasys it simplifies the process of handling the data and directly gives the user the information they need.
+
+Created for the **VIEWS Challenge: Turning Conflict Forecasts into Accessible APIs** during the [Junction x Oulu Hackaton 2025](https://eu.junctionplatform.com/events/junctionx-oulu-hackathon)
 
 ## ⚙️ Features
 - **Searchable** by Country, Grid IDs and Range of Months
