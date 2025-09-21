@@ -11,13 +11,21 @@ load_dotenv()  # load .env into os.environ
 
 class Settings(BaseModel):
     port: int = Field(8000, description="Server port")
+        
+    database_url: str = Field("", description="Database connection URL")
+    database_user: str = Field("", description="Database username")
+    database_password: str = Field("", description="Database password")
+    database_port: int = Field(5432, description="Database port")
     
-    database_url: str = Field(None, description="Database connection URL")
-    use_api_keys: bool = Field(True, description="Use API keys for authentification")
+    default_daily_requests_limit: int = Field(1000, description="Default daily requests limit per API key")
     
+    key_life_span: int = Field(90, description="API key life span in days")
+    keys_mode: bool = Field(True, description="Enable API key support")
+
+    rate_limit_requests: int = Field(100, description="Number of requests allowed in the rate limit window")
+    rate_limit_window: int = Field(60, description="Rate limit window in minutes")
+
     response_compression_min: int = Field(1024, description="Minimum size for compression")
-    cell_request_default_limit: int = Field(50, description="Default request limit")
-    cell_request_max_limit: int = Field(500, description="Maximum request limit")
     timeout: int = Field(60, description="Request timeout in seconds")
     
     debug: bool = Field(False, description="Enable debug mode")

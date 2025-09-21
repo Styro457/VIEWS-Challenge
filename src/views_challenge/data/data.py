@@ -143,7 +143,6 @@ class ViewsDataProcessor:
                 comprehensive_df[col] = prob_df[col]
 
         print("  Statistics computation complete!")
-        print(comprehensive_df)
         return comprehensive_df
 
     def _extract_violence_type_forecast(
@@ -237,7 +236,7 @@ class ViewsDataProcessor:
         if thresholds:
             extracted_thresholds = {}
             for threshold in thresholds:
-                formatted_threshold = str(int(threshold * 1000)).zfill(3)
+                formatted_threshold = str(int(threshold * 100)).zfill(3)
                 threshold_col = f"{pred_col}_p>{threshold}"
                 extracted_thresholds[f"prob_above_{formatted_threshold}"] = float(row[threshold_col])
 

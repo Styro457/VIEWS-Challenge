@@ -6,25 +6,19 @@ API key handling functions
 # cryptography module for token generation
 import secrets
 from datetime import datetime, timedelta
-
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from views_challenge.configs.config import settings
 from views_challenge.database.models import APIKey, RequestLog
+from views_challenge.configs.config import settings
 
 from views_challenge.database.database import database
 
 keys_router = APIRouter()
 
 
-# key life span in days
-KEY_LIFE_SPAN = 90
-KEYS_MODE = True
-
-# rate limiting settings
-RATE_LIMIT_REQUESTS = 100  # requests per hour
-RATE_LIMIT_WINDOW = 60  # minutes
+# Configuration is now handled via settings object from config.py
 
 def use_keys() -> bool:
     return settings.use_api_keys and database.get_db() is not None
@@ -35,7 +29,7 @@ def check_rate_limit(api_key: str, endpoint: str, db: Session) -> bool:
     Returns True if within limit, False if exceeded.
     """
     # Calculate the time window (now - RATE_LIMIT_WINDOW minutes)
-    window_start = datetime.utcnow() - timedelta(minutes=RATE_LIMIT_WINDOW)
+    window_start = datetime.utcnow() - timedelta(minutes=settings.rate_limit_window)
 
     # Count requests in the current window
     request_count = (
@@ -49,7 +43,7 @@ def check_rate_limit(api_key: str, endpoint: str, db: Session) -> bool:
     )
 
     # Check if within limit
-    return request_count < RATE_LIMIT_REQUESTS
+    return request_count < settings.rate_limit_requests
 
 
 def log_request(api_key: str, endpoint: str, db: Session):
@@ -179,7 +173,7 @@ def create_user_api_key(db: Session = Depends(database.get_db)):
     # generates api key
     key = generate_api_key()
     # calculates expiration datetime
-    expiration = datetime.utcnow() + timedelta(days=KEY_LIFE_SPAN)
+    expiration = datetime.utcnow() + timedelta(days=settings.key_life_span)
     # creates new key object for database
     new_key_object = APIKey(key=key, expires_at=expiration)
     # puts the object in database
@@ -196,7 +190,7 @@ def create_admin_api_key(db: Session = Depends(database.get_db), admin_key:str=D
      requires admin key to be accessed
     """
     key = generate_api_key()
-    expiration = datetime.utcnow() + timedelta(days=KEY_LIFE_SPAN)
+    expiration = datetime.utcnow() + timedelta(days=settings.key_life_span)
     new_key_object = APIKey(key=key, expires_at=None, admin=True)
     db.add(new_key_object)
     db.commit()

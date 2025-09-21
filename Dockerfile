@@ -10,6 +10,17 @@ ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
 
+# Application configuration defaults (can be overridden at runtime)
+ENV DATABASE_USER=postgres \
+    DATABASE_PASSWORD=IHatePostgres \
+    DATABASE_PORT=5432 \
+    PORT=8000 \
+    KEYS_MODE=true \
+    RATE_LIMIT_REQUESTS=100 \
+    RATE_LIMIT_WINDOW=60 \
+    KEY_LIFE_SPAN=90 \
+    DEBUG=false
+
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     build-essential \

@@ -71,7 +71,7 @@ async def get_cells_by_filters(
     violence_types: Optional[List[ViolenceType]] = Query(
         None, description="Violence types to include"
     ),
-    limit: int = Query(settings.cell_request_default_limit, ge=1, le=settings.cell_request_max_limit,
+    limit: int = Query(default=settings.cell_request_default_limit, ge=1, le=settings.cell_request_max_limit,
                        description="Maximum number of cells to return"),
     offset: Optional[int] = Query(
         None, description="Offset from where to start returning cells"
