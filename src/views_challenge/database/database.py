@@ -39,5 +39,5 @@ class Database:
             db.close()
 
 database = Database()
-if settings.database_url is not None:
+if settings.database_url is not None and settings.database_url != "":
     database.connect(settings.database_url)
