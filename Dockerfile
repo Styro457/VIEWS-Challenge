@@ -24,17 +24,21 @@ ENV DATABASE_USER=postgres \
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     build-essential \
+    gcc \
+    libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy dependency files
 COPY pyproject.toml ./
 
-# Install Python dependencies
-RUN pip install -e .
-
 # Copy application code
 COPY src/ ./src/
 COPY run.py ./
+
+# Install Python dependencies
+RUN pip install --upgrade pip
+RUN pip install hatch
+RUN pip install -e .
 
 # Create non-root user for security
 RUN groupadd -r appuser && useradd -r -g appuser appuser
