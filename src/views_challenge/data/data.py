@@ -5,10 +5,14 @@ Data processing functions using views_pipeline_core for VIEWS conflict forecasti
 import pandas as pd
 from pathlib import Path
 from typing import List, Optional
+
 from views_pipeline_core.data.handlers import PGMDataset
 
-from .models import Cell, MonthForecast, ViolenceTypeForecast, CellsResponse
+from views_challenge.data.models import Cell, MonthForecast, ViolenceTypeForecast, CellsResponse
+from views_challenge.data import statistics
 from views_challenge.utils.utils import decode_country
+
+CONFLICT_TYPES = ["sb", "ns", "os"]
 
 
 class ViewsDataProcessor:
@@ -43,12 +47,16 @@ class ViewsDataProcessor:
         month_range_start: Optional[int] = None,
         month_range_end: Optional[int] = None,
         country_id: Optional[int] = None,
-        country_name_field: bool = None,
+        violence_types: Optional[List[str]] = None,
     ) -> pd.DataFrame:
         """Apply filters to the dataframe (fast pandas operations)."""
         filtered_df = df.copy()
 
         # Apply filters
+        for conflict_type in CONFLICT_TYPES:
+            if conflict_type not in violence_types:
+                filtered_df = filtered_df.drop(f"pred_ln_{conflict_type}_best", axis=1)
+
         if country_id is not None:
             filtered_df = filtered_df[filtered_df["country_id"] == country_id]
 
@@ -79,6 +87,7 @@ class ViewsDataProcessor:
         ci_50: bool = False,
         ci_90: bool = False,
         ci_99: bool = False,
+        thresholds: Optional[List[float]] = None,
     ) -> pd.DataFrame:
         """Compute statistics only for the filtered subset (efficient)."""
         if len(filtered_df) == 0:
@@ -123,7 +132,18 @@ class ViewsDataProcessor:
                     new_col_name = col.replace("_hdi_", f"_hdi_{pct_str}_")
                     comprehensive_df[new_col_name] = hdi_df[col]
 
+        if thresholds:
+            print("  Calculating thresholds probabilities...")
+            prob_df = statistics.calculate_threshold_probabilities(
+                dataset, thresholds = thresholds
+            )
+
+            # Add each column to the comprehensive dataframe
+            for col in prob_df.columns:
+                comprehensive_df[col] = prob_df[col]
+
         print("  Statistics computation complete!")
+        print(comprehensive_df)
         return comprehensive_df
 
     def _extract_violence_type_forecast(
@@ -135,7 +155,7 @@ class ViewsDataProcessor:
         ci_50: bool = False,
         ci_90: bool = False,
         ci_99: bool = False,
-        include_prob_thresholds: bool = True,
+        thresholds: Optional[List[bool]] = None
     ) -> ViolenceTypeForecast:
         """
         Extract forecast data for a specific violence type from a dataframe row.
@@ -213,41 +233,32 @@ class ViewsDataProcessor:
                 )
                 extracted_ci_99 = (lower, upper)
 
-        # TODO: Add actual probability threshold calculations
-        # For now, using placeholder values only if requested
-        if include_prob_thresholds:
-            prob_thresholds = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
-        else:
-            prob_thresholds = [None] * 6
+        extracted_thresholds = None
+        if thresholds:
+            extracted_thresholds = {}
+            for threshold in thresholds:
+                formatted_threshold = str(int(threshold * 1000)).zfill(3)
+                threshold_col = f"{pred_col}_p>{threshold}"
+                extracted_thresholds[f"prob_above_{formatted_threshold}"] = float(row[threshold_col])
 
         # Build forecast object with only requested fields
         forecast_data = {}
 
-        if map_value and extracted_map_value is not None:
+        if extracted_map_value is not None:
             forecast_data["map_value"] = extracted_map_value
 
-        if ci_50 and extracted_ci_50 is not None:
+        if extracted_ci_50 is not None:
             forecast_data["ci_50"] = extracted_ci_50
 
-        if ci_90 and extracted_ci_90 is not None:
+        if extracted_ci_90 is not None:
             forecast_data["ci_90"] = extracted_ci_90
 
-        if ci_99 and extracted_ci_99 is not None:
+        if extracted_ci_99 is not None:
             forecast_data["ci_99"] = extracted_ci_99
 
-        if include_prob_thresholds:
-            if prob_thresholds[0] is not None:
-                forecast_data["prob_above_10"] = prob_thresholds[0]
-            if prob_thresholds[1] is not None:
-                forecast_data["prob_above_20"] = prob_thresholds[1]
-            if prob_thresholds[2] is not None:
-                forecast_data["prob_above_30"] = prob_thresholds[2]
-            if prob_thresholds[3] is not None:
-                forecast_data["prob_above_40"] = prob_thresholds[3]
-            if prob_thresholds[4] is not None:
-                forecast_data["prob_above_50"] = prob_thresholds[4]
-            if prob_thresholds[5] is not None:
-                forecast_data["prob_above_60"] = prob_thresholds[5]
+        if extracted_thresholds:
+            for key, val in extracted_thresholds.items():
+                forecast_data[key] = val
 
         return ViolenceTypeForecast(**forecast_data)
 
@@ -266,7 +277,7 @@ class ViewsDataProcessor:
         ci_50: bool = False,
         ci_90: bool = False,
         ci_99: bool = False,
-        include_prob_thresholds: bool = True,
+        thresholds: Optional[List[float]] = None,
         limit: int = None,
         offset: int = None
     ) -> CellsResponse:
@@ -286,6 +297,10 @@ class ViewsDataProcessor:
         Returns:
             CellsResponse with filtered and processed data
         """
+        # Default to all violence types if none specified
+        if violence_types is None:
+            violence_types = CONFLICT_TYPES
+
         # Step 1: Apply filters to raw data (FAST - just pandas filtering)
         filtered_df = self._apply_filters(
             self.raw_df,
@@ -293,6 +308,7 @@ class ViewsDataProcessor:
             month_range_start=month_range_start,
             month_range_end=month_range_end,
             country_id=country_id,
+            violence_types=violence_types,
         )
 
         # Step 2: Apply limit and offset to the filtered values
@@ -306,14 +322,10 @@ class ViewsDataProcessor:
         if len(filtered_df) == 0:
             return CellsResponse(cells=[], count=0, filters_applied={})
 
-        # Step 2: Compute statistics only for filtered data (EFFICIENT)
+        # Step 3: Compute statistics only for filtered data (EFFICIENT)
         df = self._compute_statistics_for_filtered_data(
-            filtered_df, map_value=map_value, ci_50=ci_50, ci_90=ci_90, ci_99=ci_99
+            filtered_df, map_value=map_value, ci_50=ci_50, ci_90=ci_90, ci_99=ci_99, thresholds=thresholds
         )
-
-        # Default to all violence types if none specified
-        if violence_types is None:
-            violence_types = ["sb", "ns", "os"]
 
         # Group by grid cell
         cells = []
@@ -341,7 +353,7 @@ class ViewsDataProcessor:
                         ci_50=ci_50,
                         ci_90=ci_90,
                         ci_99=ci_99,
-                        include_prob_thresholds=include_prob_thresholds,
+                        thresholds=thresholds
                     )
                     # Only include violence types that have actual data
                     forecast_dict = forecast.model_dump()
@@ -433,7 +445,7 @@ def get_cells_with_filters(
     ci_50: bool = True,
     ci_90: bool = True,
     ci_99: bool = True,
-    include_prob_thresholds: bool = True,
+    thresholds: Optional[List[float]] = None,
     limit: int = 10,
     offset: int = None
 ) -> CellsResponse:
@@ -453,7 +465,7 @@ def get_cells_with_filters(
         ci_50=ci_50,
         ci_90=ci_90,
         ci_99=ci_99,
-        include_prob_thresholds=include_prob_thresholds,
+        thresholds=thresholds,
         limit=limit,
         offset=offset,
     )

@@ -17,23 +17,23 @@ class ViolenceTypeForecast(BaseModel):
     ci_99: Optional[Tuple[float, float]] = Field(
         None, description="99% confidence interval (lower, upper)"
     )
-    prob_above_10: Optional[float] = Field(
-        None, ge=0, le=1, description="Probability above threshold 10"
+    prob_above_001: Optional[float] = Field(
+        None, ge=0, le=1, description="Probability above threshold 0.01"
     )
-    prob_above_20: Optional[float] = Field(
-        None, ge=0, le=1, description="Probability above threshold 20"
+    prob_above_005: Optional[float] = Field(
+        None, ge=0, le=1, description="Probability above threshold 0.05"
     )
-    prob_above_30: Optional[float] = Field(
-        None, ge=0, le=1, description="Probability above threshold 30"
+    prob_above_010: Optional[float] = Field(
+        None, ge=0, le=1, description="Probability above threshold 0.10"
     )
-    prob_above_40: Optional[float] = Field(
-        None, ge=0, le=1, description="Probability above threshold 40"
+    prob_above_025: Optional[float] = Field(
+        None, ge=0, le=1, description="Probability above threshold 0.25"
     )
-    prob_above_50: Optional[float] = Field(
-        None, ge=0, le=1, description="Probability above threshold 50"
+    prob_above_050: Optional[float] = Field(
+        None, ge=0, le=1, description="Probability above threshold 0.50"
     )
-    prob_above_60: Optional[float] = Field(
-        None, ge=0, le=1, description="Probability above threshold 60"
+    prob_above_080: Optional[float] = Field(
+        None, ge=0, le=1, description="Probability above threshold 0.80"
     )
 
     model_config = {"extra": "forbid"}
@@ -44,8 +44,8 @@ class ViolenceTypeForecast(BaseModel):
             getattr(self, field) is None
             for field in [
                 'map_value', 'ci_50', 'ci_90', 'ci_99',
-                'prob_above_10', 'prob_above_20', 'prob_above_30',
-                'prob_above_40', 'prob_above_50', 'prob_above_60'
+                'prob_above_001', 'prob_above_005', 'prob_above_010',
+                'prob_above_025', 'prob_above_050', 'prob_above_080'
             ]
         )
 
