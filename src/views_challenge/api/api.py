@@ -30,13 +30,12 @@ class ReturnParameters(str, Enum):
     ci_50 = "ci_50"
     ci_90 = "ci_90"
     ci_99 = "ci_99"
-    prob_above_10 = "prob_above_10"
-    prob_above_20 = "prob_above_20"
-    prob_above_30 = "prob_above_30"
-    prob_above_40 = "prob_above_40"
-    prob_above_50 = "prob_above_50"
-    prob_above_60 = "prob_above_60"
-
+    prob_above_001 = "prob_above_001"
+    prob_above_005 = "prob_above_005"
+    prob_above_010 = "prob_above_010"
+    prob_above_025 = "prob_above_025"
+    prob_above_050 = "prob_above_050"
+    prob_above_080 = "prob_above_080"
 
 router = APIRouter()
 
@@ -119,7 +118,7 @@ async def get_cells_by_filters(
         # Default: include all fields
         grid_id = lat_lon = country_id_field = country_name_field = True
         map_value = ci_50 = ci_90 = ci_99 = True
-        prob_thresholds = True
+        thresholds = [0.01, 0.05, 0.10, 0.25, 0.50, 0.80]
     else:
         # Selective: include essentials + specified fields
         grid_id = True  # Always include when return_params specified
@@ -130,10 +129,14 @@ async def get_cells_by_filters(
         ci_50 = ReturnParameters.ci_50 in return_params
         ci_90 = ReturnParameters.ci_90 in return_params
         ci_99 = ReturnParameters.ci_99 in return_params
-        prob_thresholds = any(
-            getattr(ReturnParameters, f"prob_above_{i}", None) in return_params
-            for i in [10, 20, 30, 40, 50, 60]
-        )
+        thresholds = []
+        for p in return_params:
+            if p.value.startswith("prob_above_"):
+                # take part after prefix
+                num_str = p.value.replace("prob_above_", "")
+                # insert decimal at right place (e.g. "025" -> 0.025)
+                threshold = float(num_str) / 1000
+                thresholds.append(threshold)
 
     # Note: grid_id, month_id are always
     # included when return_params specified
@@ -155,7 +158,7 @@ async def get_cells_by_filters(
         ci_50=ci_50,
         ci_90=ci_90,
         ci_99=ci_99,
-        include_prob_thresholds=prob_thresholds,
+        thresholds=thresholds,
         limit=limit,
         offset=offset,
     )
